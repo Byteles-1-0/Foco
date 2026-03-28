@@ -10,6 +10,12 @@
 </head>
 <body>
 <div id="app"></div>
+<script type="module">
+  // Load COBE as ES module and expose globally
+  import createGlobe from 'https://cdn.skypack.dev/cobe@0.6.3';
+  window.createGlobe = createGlobe;
+  window.COBE = createGlobe;
+</script>
 <script src="suca.js"></script>
 </body>
 </html>

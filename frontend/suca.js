@@ -1,649 +1,292 @@
-// ============================================================
-// DATI MOCKUP - Prodotto 1 (Freader) e Prodotto 2 (CutAI)
-// ============================================================
+/* Contract Intelligence — Frontend v2 */
+const API="http://127.0.0.1:5000/api";
+let section="overview",costProduct="prodotto1",selectedIdx=null,expandedMetrics={},cache={};
 
-const PRODOTTO1_CONTRATTI = [
-  { cliente:"Ciao", sede:"Milano", canoneTrim:10000, prezzoF1:12, prezzoF2:10, prezzoF3:9, creditoUptime:10, creditoTicketing:5, tettoCred:10, durataMesi:12, preavvisoGG:30, dataFirma:"20/03/2025" },
-  { cliente:"Hello", sede:"Roma", canoneTrim:5000, prezzoF1:20, prezzoF2:16, prezzoF3:12, creditoUptime:5, creditoTicketing:5, tettoCred:10, durataMesi:12, preavvisoGG:30, dataFirma:"20/07/2025" },
-  { cliente:"Hola", sede:"Milano", canoneTrim:10000, prezzoF1:13, prezzoF2:11, prezzoF3:10, creditoUptime:10, creditoTicketing:5, tettoCred:10, durataMesi:12, preavvisoGG:30, dataFirma:"20/08/2025" },
-  { cliente:"Bonjour", sede:"Roma", canoneTrim:7000, prezzoF1:15, prezzoF2:14, prezzoF3:13, creditoUptime:7, creditoTicketing:6, tettoCred:10, durataMesi:36, preavvisoGG:30, dataFirma:"30/12/2024" },
-  { cliente:"Hallo", sede:"Torino", canoneTrim:10000, prezzoF1:13, prezzoF2:11, prezzoF3:10, creditoUptime:10, creditoTicketing:5, tettoCred:10, durataMesi:12, preavvisoGG:60, dataFirma:"20/10/2025" },
-  { cliente:"Ola", sede:"Bologna", canoneTrim:10000, prezzoF1:12, prezzoF2:10, prezzoF3:8, creditoUptime:7, creditoTicketing:10, tettoCred:10, durataMesi:12, preavvisoGG:30, dataFirma:"14/04/2025" },
-  { cliente:"Salut", sede:"Napoli", canoneTrim:10000, prezzoF1:14, prezzoF2:12, prezzoF3:11, creditoUptime:5, creditoTicketing:6, tettoCred:10, durataMesi:12, preavvisoGG:30, dataFirma:"27/02/2025" },
-  { cliente:"Ahoj", sede:"Milano", canoneTrim:7000, prezzoF1:15, prezzoF2:13, prezzoF3:12, creditoUptime:5, creditoTicketing:5, tettoCred:10, durataMesi:24, preavvisoGG:12, dataFirma:"19/12/2024" },
-  { cliente:"Dobrý den", sede:"Roma", canoneTrim:7000, prezzoF1:15, prezzoF2:12, prezzoF3:10, creditoUptime:5, creditoTicketing:5, tettoCred:10, durataMesi:24, preavvisoGG:30, dataFirma:"04/04/2024" },
-  { cliente:"Szia", sede:"Firenze", canoneTrim:7000, prezzoF1:16, prezzoF2:14, prezzoF3:13, creditoUptime:5, creditoTicketing:8, tettoCred:12, durataMesi:22, preavvisoGG:30, dataFirma:"06/06/2025" },
-  { cliente:"Hej", sede:"Genova", canoneTrim:5000, prezzoF1:20, prezzoF2:18, prezzoF3:14, creditoUptime:7, creditoTicketing:5, tettoCred:10, durataMesi:12, preavvisoGG:30, dataFirma:"07/08/2025" },
-  { cliente:"Merhaba", sede:"Verona", canoneTrim:5000, prezzoF1:18, prezzoF2:16, prezzoF3:15, creditoUptime:5, creditoTicketing:5, tettoCred:10, durataMesi:12, preavvisoGG:30, dataFirma:"06/07/2025" },
-  { cliente:"Selam", sede:"Padova", canoneTrim:5000, prezzoF1:19, prezzoF2:17, prezzoF3:16, creditoUptime:5, creditoTicketing:5, tettoCred:10, durataMesi:6, preavvisoGG:30, dataFirma:"07/08/2025" },
-  { cliente:"Bok", sede:"Brescia", canoneTrim:7000, prezzoF1:16, prezzoF2:14, prezzoF3:13, creditoUptime:5, creditoTicketing:5, tettoCred:10, durataMesi:12, preavvisoGG:30, dataFirma:"06/05/2025" },
-  { cliente:"Zdravo", sede:"Milano", canoneTrim:7000, prezzoF1:15, prezzoF2:13, prezzoF3:12, creditoUptime:5, creditoTicketing:5, tettoCred:10, durataMesi:12, preavvisoGG:30, dataFirma:"09/09/2025" },
-  { cliente:"Buna", sede:"Roma", canoneTrim:5000, prezzoF1:17, prezzoF2:14, prezzoF3:13, creditoUptime:8, creditoTicketing:5, tettoCred:13, durataMesi:36, preavvisoGG:120, dataFirma:"12/12/2024" },
-  { cliente:"Alo", sede:"Torino", canoneTrim:7000, prezzoF1:14, prezzoF2:12, prezzoF3:11, creditoUptime:5, creditoTicketing:5, tettoCred:10, durataMesi:12, preavvisoGG:30, dataFirma:"04/04/2025" },
-  { cliente:"Labas", sede:"Bologna", canoneTrim:7000, prezzoF1:12, prezzoF2:9, prezzoF3:8, creditoUptime:5, creditoTicketing:5, tettoCred:10, durataMesi:8, preavvisoGG:30, dataFirma:"01/01/2026" },
-  { cliente:"Sveiki", sede:"Napoli", canoneTrim:7000, prezzoF1:16, prezzoF2:14, prezzoF3:13, creditoUptime:9, creditoTicketing:5, tettoCred:12, durataMesi:18, preavvisoGG:90, dataFirma:"05/02/2025" },
-  { cliente:"Tere", sede:"Modena", canoneTrim:10000, prezzoF1:13, prezzoF2:10, prezzoF3:6, creditoUptime:5, creditoTicketing:10, tettoCred:12, durataMesi:12, preavvisoGG:30, dataFirma:"12/05/2024" },
-];
-
-const PRODOTTO2_CONTRATTI = [
-  { cliente:"Buonasera", sede:"Milano", dataFirma:"12/01/2025", canoneTrim:1000, utentiInclusi:70, feeExtra:20, profilo:"Standard", sogliaUptime:98, creditoUptime:5, creditoTicketing:5, tettoCred:10, durataMesi:12, preavvisoGG:30 },
-  { cliente:"Buenasera", sede:"Roma", dataFirma:"27/04/2025", canoneTrim:3000, utentiInclusi:100, feeExtra:20, profilo:"Premium", sogliaUptime:99, creditoUptime:10, creditoTicketing:5, tettoCred:15, durataMesi:24, preavvisoGG:60 },
-  { cliente:"Bonsoir", sede:"Torino", dataFirma:"09/05/2025", canoneTrim:15000, utentiInclusi:70, feeExtra:20, profilo:"Standard", sogliaUptime:98, creditoUptime:5, creditoTicketing:4, tettoCred:9, durataMesi:24, preavvisoGG:45 },
-  { cliente:"Good evening", sede:"Milano", dataFirma:"21/05/2025", canoneTrim:15000, utentiInclusi:80, feeExtra:20, profilo:"Standard", sogliaUptime:98, creditoUptime:5, creditoTicketing:5, tettoCred:10, durataMesi:24, preavvisoGG:60 },
-  { cliente:"Guten Abend", sede:"Napoli", dataFirma:"03/06/2025", canoneTrim:2000, utentiInclusi:50, feeExtra:20, profilo:"Standard", sogliaUptime:98, creditoUptime:5, creditoTicketing:4, tettoCred:9, durataMesi:12, preavvisoGG:60 },
-  { cliente:"Boa noite", sede:"Bologna", dataFirma:"18/06/2025", canoneTrim:3000, utentiInclusi:60, feeExtra:30, profilo:"Premium", sogliaUptime:99, creditoUptime:15, creditoTicketing:5, tettoCred:20, durataMesi:24, preavvisoGG:60 },
-  { cliente:"Buna seara", sede:"Roma", dataFirma:"07/07/2025", canoneTrim:2000, utentiInclusi:80, feeExtra:20, profilo:"Standard", sogliaUptime:98, creditoUptime:5, creditoTicketing:4, tettoCred:9, durataMesi:12, preavvisoGG:60 },
-  { cliente:"Dobra vecer", sede:"Firenze", dataFirma:"22/07/2025", canoneTrim:1500, utentiInclusi:60, feeExtra:20, profilo:"Standard", sogliaUptime:98, creditoUptime:5, creditoTicketing:4, tettoCred:9, durataMesi:12, preavvisoGG:60 },
-  { cliente:"Dobar vecer", sede:"Milano", dataFirma:"11/08/2025", canoneTrim:1500, utentiInclusi:80, feeExtra:20, profilo:"Standard", sogliaUptime:98, creditoUptime:5, creditoTicketing:4, tettoCred:9, durataMesi:12, preavvisoGG:60 },
-  { cliente:"Labas vakaras", sede:"Genova", dataFirma:"29/08/2025", canoneTrim:4000, utentiInclusi:90, feeExtra:20, profilo:"Premium", sogliaUptime:99, creditoUptime:15, creditoTicketing:5, tettoCred:20, durataMesi:12, preavvisoGG:30 },
-  { cliente:"Labvakar", sede:"Verona", dataFirma:"14/09/2025", canoneTrim:1200, utentiInclusi:80, feeExtra:20, profilo:"Standard", sogliaUptime:98, creditoUptime:5, creditoTicketing:4, tettoCred:9, durataMesi:36, preavvisoGG:60 },
-  { cliente:"Tere ohtust", sede:"Milano", dataFirma:"30/09/2025", canoneTrim:1200, utentiInclusi:80, feeExtra:20, profilo:"Standard", sogliaUptime:98, creditoUptime:5, creditoTicketing:4, tettoCred:9, durataMesi:12, preavvisoGG:45 },
-  { cliente:"Hyvaa iltaa", sede:"Padova", dataFirma:"12/10/2025", canoneTrim:3500, utentiInclusi:60, feeExtra:35, profilo:"Premium", sogliaUptime:99, creditoUptime:15, creditoTicketing:5, tettoCred:20, durataMesi:12, preavvisoGG:60 },
-  { cliente:"God kveld", sede:"Bari", dataFirma:"26/10/2025", canoneTrim:1000, utentiInclusi:40, feeExtra:20, profilo:"Standard", sogliaUptime:98, creditoUptime:5, creditoTicketing:6, tettoCred:11, durataMesi:12, preavvisoGG:60 },
-  { cliente:"God aften", sede:"Roma", dataFirma:"08/11/2025", canoneTrim:2800, utentiInclusi:40, feeExtra:30, profilo:"Premium", sogliaUptime:99, creditoUptime:15, creditoTicketing:5, tettoCred:20, durataMesi:12, preavvisoGG:60 },
-  { cliente:"God kvall", sede:"Venezia", dataFirma:"24/11/2025", canoneTrim:1800, utentiInclusi:60, feeExtra:20, profilo:"Standard", sogliaUptime:98, creditoUptime:5, creditoTicketing:4, tettoCred:9, durataMesi:12, preavvisoGG:30 },
-  { cliente:"Yaxsam xeyir", sede:"Catania", dataFirma:"10/12/2025", canoneTrim:1500, utentiInclusi:65, feeExtra:20, profilo:"Standard", sogliaUptime:98, creditoUptime:10, creditoTicketing:5, tettoCred:15, durataMesi:24, preavvisoGG:60 },
-  { cliente:"Dobry vecer", sede:"Milano", dataFirma:"21/12/2025", canoneTrim:1500, utentiInclusi:38, feeExtra:35, profilo:"Premium", sogliaUptime:99, creditoUptime:15, creditoTicketing:5, tettoCred:20, durataMesi:12, preavvisoGG:30 },
-  { cliente:"Pryjemnyj vecir", sede:"Modena", dataFirma:"05/01/2026", canoneTrim:1500, utentiInclusi:65, feeExtra:20, profilo:"Standard", sogliaUptime:98, creditoUptime:5, creditoTicketing:5, tettoCred:10, durataMesi:12, preavvisoGG:60 },
-  { cliente:"Kalispera", sede:"Palermo", dataFirma:"19/01/2026", canoneTrim:2000, utentiInclusi:50, feeExtra:35, profilo:"Premium", sogliaUptime:99, creditoUptime:15, creditoTicketing:5, tettoCred:20, durataMesi:12, preavvisoGG:30 },
-];
-
-
-// ============================================================
-// COSTI MOCKUP
-// ============================================================
-const COSTI = {
-  prodotto1: {
-    fissi: [
-      { voce:"Licenza infrastruttura cloud", importo:18000, tipo:"indiretto" },
-      { voce:"Stipendi team sviluppo", importo:120000, tipo:"diretto" },
-      { voce:"Affitto ufficio", importo:24000, tipo:"indiretto" },
-      { voce:"Ammortamento server", importo:15000, tipo:"indiretto" },
-      { voce:"Assicurazione", importo:6000, tipo:"indiretto" },
-    ],
-    variabili: [
-      { voce:"Costo elaborazione pagine (hosting)", importo:0.03, unitaMisura:"€/pagina", volumeStimato:500000, tipo:"diretto" },
-      { voce:"Supporto clienti (ticket)", importo:8, unitaMisura:"€/ticket", volumeStimato:1200, tipo:"diretto" },
-      { voce:"Commissioni pagamento", importo:0.5, unitaMisura:"% fatturato", tipo:"indiretto" },
-      { voce:"Marketing digitale", importo:3000, unitaMisura:"€/mese", tipo:"indiretto" },
-      { voce:"Formazione clienti", importo:500, unitaMisura:"€/cliente", volumeStimato:20, tipo:"diretto" },
-    ]
-  },
-  prodotto2: {
-    fissi: [
-      { voce:"Licenza AI engine", importo:25000, tipo:"indiretto" },
-      { voce:"Stipendi team AI/ML", importo:150000, tipo:"diretto" },
-      { voce:"Affitto ufficio (quota)", importo:12000, tipo:"indiretto" },
-      { voce:"Ammortamento GPU cluster", importo:30000, tipo:"indiretto" },
-      { voce:"Certificazioni sicurezza", importo:8000, tipo:"indiretto" },
-    ],
-    variabili: [
-      { voce:"Costo computazione AI per utente", importo:2.5, unitaMisura:"€/utente/mese", volumeStimato:1400, tipo:"diretto" },
-      { voce:"Supporto clienti (ticket)", importo:12, unitaMisura:"€/ticket", volumeStimato:800, tipo:"diretto" },
-      { voce:"Commissioni pagamento", importo:0.5, unitaMisura:"% fatturato", tipo:"indiretto" },
-      { voce:"Marketing digitale", importo:4000, unitaMisura:"€/mese", tipo:"indiretto" },
-      { voce:"Onboarding clienti", importo:800, unitaMisura:"€/cliente", volumeStimato:20, tipo:"diretto" },
-    ]
-  }
+async function api(path,opts){
+  const key=opts?null:path;
+  if(key&&cache[key])return cache[key];
+  try{const r=await fetch(API+path,opts);if(!r.ok)throw 0;const d=await r.json();if(key)cache[key]=d;return d;}catch{return null;}
+}
+const euro=n=>n==null?"—":n.toLocaleString("it-IT",{style:"currency",currency:"EUR"});
+const pct=n=>n==null?"—":n.toFixed(1)+"%";
+const num=n=>n==null?"—":n.toLocaleString("it-IT");
+const IC={
+  overview:`<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>`,
+  costs:`<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 2v20m5-17H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H7"/></svg>`,
+  contracts:`<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`,
+  clients:`<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>`,
+  ai:`<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 2a4 4 0 014 4v1a4 4 0 01-8 0V6a4 4 0 014-4z"/><path d="M6 21v-2a6 6 0 0112 0v2"/><circle cx="12" cy="12" r="10" stroke-dasharray="3 3"/></svg>`,
+  arrow:`<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>`,
+  ext:`<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>`,
+  bell:`<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>`,
 };
 
-// ============================================================
-// UTILITY
-// ============================================================
-function parseDataIta(str) {
-  const [g, m, a] = str.split("/").map(Number);
-  return new Date(a, m - 1, g);
-}
-function formatDate(d) {
-  return d.toLocaleDateString("it-IT", { day:"2-digit", month:"2-digit", year:"numeric" });
-}
-function formatEuro(n) {
-  return n.toLocaleString("it-IT", { style:"currency", currency:"EUR" });
-}
-function giorniAllaScadenza(dataFirma, durataMesi) {
-  const firma = parseDataIta(dataFirma);
-  const scadenza = new Date(firma);
-  scadenza.setMonth(scadenza.getMonth() + durataMesi);
-  const oggi = new Date(2026, 2, 28); // 28 marzo 2026
-  return Math.ceil((scadenza - oggi) / (1000 * 60 * 60 * 24));
-}
-function dataScadenza(dataFirma, durataMesi) {
-  const firma = parseDataIta(dataFirma);
-  const scadenza = new Date(firma);
-  scadenza.setMonth(scadenza.getMonth() + durataMesi);
-  return scadenza;
+function nav(s){section=s;selectedIdx=null;expandedMetrics={};cache={};render();}
+function openDetail(i){selectedIdx=i;section="contracts";render();}
+function backToContracts(){selectedIdx=null;render();}
+function setCostProd(p){costProduct=p;cache={};render();}
+function toggleMetric(key){expandedMetrics[key]=!expandedMetrics[key];render();}
+
+// ── Push notifications ──
+async function checkAndNotify(){
+  if(!("Notification" in window))return;
+  if(Notification.permission==="default")await Notification.requestPermission();
+  if(Notification.permission!=="granted")return;
+  const anom=await api("/anomalies");
+  if(!anom)return;
+  const critical=anom.filter(a=>a.gravita==="alta");
+  if(critical.length>0){
+    new Notification("⚠️ ContractIQ — Anomalie critiche",{
+      body:`${critical.length} anomalie gravi rilevate: ${critical.map(a=>a.cliente).join(", ")}`,
+      icon:"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚠️</text></svg>",
+      tag:"contractiq-anomalies"
+    });
+  }
 }
 
-// Unisci tutti i contratti con prodotto di riferimento
-function getAllContratti() {
-  const all = [];
-  PRODOTTO1_CONTRATTI.forEach(c => {
-    const scad = dataScadenza(c.dataFirma, c.durataMesi);
-    const gg = giorniAllaScadenza(c.dataFirma, c.durataMesi);
-    const fattAnnuo = c.canoneTrim * 4;
-    all.push({ ...c, prodotto:"Freader", scadenza:scad, giorniScadenza:gg, fatturatoAnnuo:fattAnnuo });
-  });
-  PRODOTTO2_CONTRATTI.forEach(c => {
-    const scad = dataScadenza(c.dataFirma, c.durataMesi);
-    const gg = giorniAllaScadenza(c.dataFirma, c.durataMesi);
-    const fattAnnuo = c.canoneTrim * 4;
-    all.push({ ...c, prodotto:"CutAI", scadenza:scad, giorniScadenza:gg, fatturatoAnnuo:fattAnnuo });
-  });
-  return all;
-}
-
-
-// ============================================================
-// CALCOLO COSTO PRODOTTO (Tradizionale + ABC)
-// ============================================================
-function calcolaCostoProdotto(prodKey) {
-  const c = COSTI[prodKey];
-  const totFissi = c.fissi.reduce((s, x) => s + x.importo, 0);
-  const totVariabili = c.variabili.reduce((s, x) => {
-    if (x.volumeStimato) return s + x.importo * x.volumeStimato;
-    if (x.unitaMisura === "€/mese") return s + x.importo * 12;
-    return s + x.importo;
-  }, 0);
-  const totDiretti = [...c.fissi, ...c.variabili].filter(x => x.tipo === "diretto").reduce((s, x) => {
-    if (x.volumeStimato) return s + x.importo * x.volumeStimato;
-    if (x.unitaMisura === "€/mese") return s + x.importo * 12;
-    return s + x.importo;
-  }, 0);
-  const totIndiretti = [...c.fissi, ...c.variabili].filter(x => x.tipo === "indiretto").reduce((s, x) => {
-    if (x.volumeStimato) return s + x.importo * x.volumeStimato;
-    if (x.unitaMisura === "€/mese") return s + x.importo * 12;
-    return s + x.importo;
-  }, 0);
-  const nContratti = prodKey === "prodotto1" ? PRODOTTO1_CONTRATTI.length : PRODOTTO2_CONTRATTI.length;
-
-  // Metodo tradizionale: allocazione indiretti proporzionale al n. contratti
-  const costoTotTrad = totDiretti + totIndiretti;
-  const costoUnitTrad = costoTotTrad / nContratti;
-
-  // Metodo ABC: allocazione per attività
-  const attivitaABC = [
-    { nome:"Gestione infrastruttura", driver:"n. contratti", costoPool: totIndiretti * 0.4 },
-    { nome:"Supporto clienti", driver:"n. ticket", costoPool: totIndiretti * 0.3 },
-    { nome:"Amministrazione", driver:"n. contratti", costoPool: totIndiretti * 0.2 },
-    { nome:"Marketing", driver:"fatturato", costoPool: totIndiretti * 0.1 },
+// ── Render shell ──
+async function render(){
+  const kpi=await api("/kpi"),exp=await api("/expiring"),anom=await api("/anomalies");
+  const scadBadge=exp?exp.length:0;
+  const anomBadge=anom?anom.filter(a=>a.gravita==="alta").length:0;
+  const navItems=[
+    {key:"overview",label:"Overview",icon:IC.overview},
+    {key:"costs",label:"Reparto Costi",icon:IC.costs},
+    {key:"contracts",label:"Contratti",icon:IC.contracts,badge:scadBadge+anomBadge>0?scadBadge+anomBadge:null},
+    {key:"topclients",label:"Top Clients",icon:IC.clients},
+    {key:"advisor",label:"AI Advisor",icon:IC.ai},
   ];
-  const costoUnitABC = (totDiretti + attivitaABC.reduce((s, a) => s + a.costoPool / nContratti, 0) * nContratti) / nContratti;
-
-  return { totFissi, totVariabili, totDiretti, totIndiretti, costoTotTrad, costoUnitTrad, costoUnitABC, nContratti, attivitaABC };
-}
-
-// ============================================================
-// ANALISI CONTRATTO
-// ============================================================
-function analizzaContratto(contratto, tuttiContratti) {
-  const stessoProdotto = tuttiContratti.filter(c => c.prodotto === contratto.prodotto);
-  const avgCanone = stessoProdotto.reduce((s, c) => s + c.canoneTrim, 0) / stessoProdotto.length;
-  const issues = [];
-
-  // Clausole non convenienti
-  if (contratto.creditoUptime >= 10) issues.push({ sezione:"Crediti Uptime", gravita:"alta", desc:`Credito uptime ${contratto.creditoUptime}% è molto alto rispetto alla media. Rischio di rimborsi elevati.` });
-  else if (contratto.creditoUptime >= 7) issues.push({ sezione:"Crediti Uptime", gravita:"media", desc:`Credito uptime ${contratto.creditoUptime}% sopra la media. Monitorare SLA.` });
-
-  if (contratto.creditoTicketing >= 8) issues.push({ sezione:"Crediti Ticketing", gravita:"alta", desc:`Credito ticketing ${contratto.creditoTicketing}% molto elevato. Clausola penalizzante.` });
-  else if (contratto.creditoTicketing >= 6) issues.push({ sezione:"Crediti Ticketing", gravita:"media", desc:`Credito ticketing ${contratto.creditoTicketing}% sopra la norma.` });
-
-  if (contratto.tettoCred >= 15) issues.push({ sezione:"Tetto Crediti", gravita:"alta", desc:`Tetto crediti ${contratto.tettoCred}% molto alto. Esposizione finanziaria significativa.` });
-  else if (contratto.tettoCred >= 12) issues.push({ sezione:"Tetto Crediti", gravita:"media", desc:`Tetto crediti ${contratto.tettoCred}% sopra la media del portafoglio.` });
-
-  // Costi non sostenibili
-  if (contratto.canoneTrim < avgCanone * 0.6) issues.push({ sezione:"Canone", gravita:"alta", desc:`Canone ${formatEuro(contratto.canoneTrim)} è il ${Math.round(contratto.canoneTrim/avgCanone*100)}% della media (${formatEuro(avgCanone)}). Potrebbe non coprire i costi.` });
-  else if (contratto.canoneTrim < avgCanone * 0.8) issues.push({ sezione:"Canone", gravita:"media", desc:`Canone sotto la media del portafoglio. Valutare rinegoziazione al rinnovo.` });
-
-  // Durata e preavviso
-  if (contratto.durataMesi >= 36) issues.push({ sezione:"Durata", gravita:"media", desc:`Contratto a lungo termine (${contratto.durataMesi} mesi). Limita flessibilità di repricing.` });
-  if (contratto.preavvisoGG >= 90) issues.push({ sezione:"Preavviso", gravita:"media", desc:`Preavviso di ${contratto.preavvisoGG} giorni. Vincolo operativo elevato.` });
-  if (contratto.preavvisoGG <= 15) issues.push({ sezione:"Preavviso", gravita:"alta", desc:`Preavviso di soli ${contratto.preavvisoGG} giorni. Rischio di churn improvviso.` });
-
-  // Scadenza imminente
-  if (contratto.giorniScadenza <= 30 && contratto.giorniScadenza > 0) issues.push({ sezione:"Scadenza", gravita:"alta", desc:`Contratto in scadenza tra ${contratto.giorniScadenza} giorni. Azione immediata richiesta.` });
-  else if (contratto.giorniScadenza <= 90 && contratto.giorniScadenza > 0) issues.push({ sezione:"Scadenza", gravita:"media", desc:`Contratto in scadenza tra ${contratto.giorniScadenza} giorni. Pianificare rinnovo.` });
-  else if (contratto.giorniScadenza <= 0) issues.push({ sezione:"Scadenza", gravita:"alta", desc:`Contratto SCADUTO da ${Math.abs(contratto.giorniScadenza)} giorni. Verificare stato rinnovo.` });
-
-  if (issues.length === 0) issues.push({ sezione:"Generale", gravita:"bassa", desc:"Nessuna criticità rilevata. Contratto in linea con il portafoglio." });
-
-  return issues;
-}
-
-// ============================================================
-// KPI & PERFORMANCE
-// ============================================================
-function calcolaKPI() {
-  const tutti = getAllContratti();
-  const p1 = tutti.filter(c => c.prodotto === "Freader");
-  const p2 = tutti.filter(c => c.prodotto === "CutAI");
-
-  const fattP1 = p1.reduce((s, c) => s + c.fatturatoAnnuo, 0);
-  const fattP2 = p2.reduce((s, c) => s + c.fatturatoAnnuo, 0);
-  const fattTot = fattP1 + fattP2;
-
-  const costiP1 = calcolaCostoProdotto("prodotto1");
-  const costiP2 = calcolaCostoProdotto("prodotto2");
-  const costiTotali = costiP1.costoTotTrad + costiP2.costoTotTrad;
-
-  const margine = fattTot - costiTotali;
-  const marginePct = (margine / fattTot * 100);
-
-  // BEP (Break Even Point) - n. contratti necessari
-  const avgFattPerContratto = fattTot / tutti.length;
-  const costiFissiTot = costiP1.totFissi + costiP2.totFissi;
-  const costiVarPerContratto = (costiP1.totVariabili + costiP2.totVariabili) / tutti.length;
-  const bepContratti = Math.ceil(costiFissiTot / (avgFattPerContratto - costiVarPerContratto));
-  const bepEuro = bepContratti * avgFattPerContratto;
-
-  // Contratti attivi vs scaduti
-  const attivi = tutti.filter(c => c.giorniScadenza > 0).length;
-  const scaduti = tutti.filter(c => c.giorniScadenza <= 0).length;
-  const inScadenza90 = tutti.filter(c => c.giorniScadenza > 0 && c.giorniScadenza <= 90).length;
-
-  // MoM e YoY (mockup)
-  const momGrowth = 3.2;
-  const yoyGrowth = 18.5;
-
-  return {
-    fattTot, fattP1, fattP2, costiTotali, margine, marginePct,
-    bepContratti, bepEuro, totContratti: tutti.length, attivi, scaduti, inScadenza90,
-    momGrowth, yoyGrowth, avgFattPerContratto
-  };
-}
-
-
-// ============================================================
-// TOP CLIENTS RATING
-// ============================================================
-function calcolaTopClients() {
-  const tutti = getAllContratti();
-  return tutti.map(c => {
-    let score = 50; // base
-    // Canone alto = buono
-    const maxCanone = Math.max(...tutti.map(x => x.canoneTrim));
-    score += (c.canoneTrim / maxCanone) * 20;
-    // Clausole favorevoli (crediti bassi = buono per noi)
-    if (c.creditoUptime <= 5) score += 10; else if (c.creditoUptime <= 7) score += 5;
-    if (c.creditoTicketing <= 5) score += 5;
-    if (c.tettoCred <= 10) score += 5;
-    // Durata lunga = fiducia
-    if (c.durataMesi >= 24) score += 10; else if (c.durataMesi >= 12) score += 5;
-    // Contratto attivo
-    if (c.giorniScadenza > 180) score += 5;
-    else if (c.giorniScadenza <= 0) score -= 10;
-    // Preavviso ragionevole
-    if (c.preavvisoGG >= 30 && c.preavvisoGG <= 60) score += 3;
-
-    return { ...c, rating: Math.min(100, Math.max(0, Math.round(score))) };
-  }).sort((a, b) => b.rating - a.rating);
-}
-
-// ============================================================
-// RENDER UI
-// ============================================================
-let currentSection = "costi";
-let selectedProdottoCosti = "prodotto1";
-let selectedContractIndex = null;
-
-function render() {
-  const app = document.getElementById("app");
-  app.innerHTML = `
-    <nav class="navbar">
-      <div class="logo">📊 Business Dashboard</div>
-      <div class="nav-links">
-        <button class="${currentSection==='costi'?'active':''}" onclick="navigate('costi')">💰 Reparto Costi</button>
-        <button class="${currentSection==='vendite'?'active':''}" onclick="navigate('vendite')">📝 Vendite & Contratti</button>
-        <button class="${currentSection==='performance'?'active':''}" onclick="navigate('performance')">📈 Performance</button>
-        <button class="${currentSection==='topclients'?'active':''}" onclick="navigate('topclients')">⭐ Top Clients</button>
+  document.getElementById("app").innerHTML=`
+  <div class="shell">
+    <aside class="side">
+      <div class="side-brand">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        <span>ContractIQ</span>
       </div>
-    </nav>
-    <main class="content">
-      ${renderSection()}
-    </main>
-  `;
+      <nav class="side-nav">
+        <div class="side-group"><div class="side-group-label">Dashboard</div>
+          ${navItems.map(n=>`<div class="side-item ${section===n.key?'on':''}" onclick="nav('${n.key}')"><span class="ico">${n.icon}</span>${n.label}${n.badge?`<span class="badge-nav">${n.badge}</span>`:''}</div>`).join('')}
+        </div>
+      </nav>
+      <div class="side-foot">ContractIQ v2.0 — 28/03/2026</div>
+    </aside>
+    <div class="mob-bar">${navItems.map(n=>`<button class="${section===n.key?'on':''}" onclick="nav('${n.key}')">${n.label}</button>`).join('')}</div>
+    <main class="main">${await renderSection()}</main>
+  </div>`;
 }
 
-function navigate(section) {
-  currentSection = section;
-  selectedContractIndex = null;
-  render();
-}
-
-function renderSection() {
-  switch(currentSection) {
-    case "costi": return renderCosti();
-    case "vendite": return renderVendite();
-    case "performance": return renderPerformance();
-    case "topclients": return renderTopClients();
-    default: return "";
+async function renderSection(){
+  switch(section){
+    case "overview":return await renderOverview();
+    case "costs":return await renderCosts();
+    case "contracts":return selectedIdx!==null?await renderDetail():await renderContracts();
+    case "topclients":return await renderTopClients();
+    case "advisor":return await renderAdvisor();
+    default:return "";
   }
 }
 
+// Expandable metric card with product breakdown
+function mce(key,label,total,freader,cutai,pctF,pctC,momTotal,yoyTotal,momF,yoyF,momC,yoyC){
+  const open=expandedMetrics[key];
+  return `<div class="m-card m-card-click${open?' m-open':''}" onclick="toggleMetric('${key}')">
+    <div class="m-label">${label} <span style="font-size:.58rem;color:var(--accent)">${open?'▾':'▸'}</span></div>
+    <div class="m-val">${total}</div>
+    <div class="m-sub"><span class="c-safe">MoM +${momTotal}%</span><span style="margin-left:8px" class="c-safe">YoY +${yoyTotal}%</span></div>
+    ${open?`<div class="m-breakdown">
+      <div class="m-bk-row"><span class="b b-fr">Freader</span><strong>${freader}</strong><span class="c-muted">${pctF}%</span><span class="c-safe" style="font-size:.68rem">MoM +${momF}% · YoY +${yoyF}%</span></div>
+      <div class="m-bk-row"><span class="b b-cu">CutAI</span><strong>${cutai}</strong><span class="c-muted">${pctC}%</span><span class="c-safe" style="font-size:.68rem">MoM +${momC}% · YoY +${yoyC}%</span></div>
+    </div>`:''}
+  </div>`;
+}
+function mc(label,value,sub,subType){
+  const cls=subType==="up"?"c-safe":subType==="down"?"c-danger":subType==="warn"?"c-warn":"c-muted";
+  return `<div class="m-card"><div class="m-label">${label}</div><div class="m-val">${value}</div>${sub?`<div class="m-sub"><span class="${cls}">${sub}</span></div>`:''}</div>`;
+}
+function kr(l,v){return `<div class="kpi-row"><span>${l}</span><strong>${v}</strong></div>`;}
 
-// ============================================================
-// SEZIONE COSTI
-// ============================================================
-function renderCosti() {
-  const cp = calcolaCostoProdotto(selectedProdottoCosti);
-  const c = COSTI[selectedProdottoCosti];
-  const nomeProd = selectedProdottoCosti === "prodotto1" ? "Freader" : "CutAI";
-
+// ══════════════════════════════════════════════
+// OVERVIEW (all KPIs, expandable breakdowns)
+// ══════════════════════════════════════════════
+async function renderOverview(){
+  const k=await api("/kpi"),exp=await api("/expiring");
+  if(!k)return `<div class="pg-hd"><h1>Overview</h1><p>Backend non raggiungibile. <code>python3 backend/main.py</code></p></div>`;
   return `
-    <div class="section-header">
-      <h2>Reparto Costi</h2>
-      <div class="toggle-prod">
-        <button class="${selectedProdottoCosti==='prodotto1'?'active':''}" onclick="switchProdCosti('prodotto1')">Freader</button>
-        <button class="${selectedProdottoCosti==='prodotto2'?'active':''}" onclick="switchProdCosti('prodotto2')">CutAI</button>
-      </div>
-    </div>
-
-    <div class="kpi-row">
-      <div class="kpi-card"><span class="kpi-label">Costi Fissi Totali</span><span class="kpi-value">${formatEuro(cp.totFissi)}</span></div>
-      <div class="kpi-card"><span class="kpi-label">Costi Variabili Totali</span><span class="kpi-value">${formatEuro(cp.totVariabili)}</span></div>
-      <div class="kpi-card"><span class="kpi-label">Costi Diretti</span><span class="kpi-value">${formatEuro(cp.totDiretti)}</span></div>
-      <div class="kpi-card"><span class="kpi-label">Costi Indiretti</span><span class="kpi-value">${formatEuro(cp.totIndiretti)}</span></div>
-    </div>
-
-    <div class="two-col">
-      <div class="card">
-        <h3>Costi Fissi</h3>
-        <table>
-          <thead><tr><th>Voce</th><th>Importo Annuo</th><th>Tipo</th></tr></thead>
-          <tbody>
-            ${c.fissi.map(x => `<tr><td>${x.voce}</td><td>${formatEuro(x.importo)}</td><td><span class="badge ${x.tipo}">${x.tipo}</span></td></tr>`).join("")}
-          </tbody>
-        </table>
-      </div>
-      <div class="card">
-        <h3>Costi Variabili</h3>
-        <table>
-          <thead><tr><th>Voce</th><th>Costo Unitario</th><th>Tipo</th></tr></thead>
-          <tbody>
-            ${c.variabili.map(x => `<tr><td>${x.voce}</td><td>${x.importo} ${x.unitaMisura||''}</td><td><span class="badge ${x.tipo}">${x.tipo}</span></td></tr>`).join("")}
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="two-col" style="margin-top:20px">
-      <div class="card highlight">
-        <h3>📐 Metodo Tradizionale</h3>
-        <p>Allocazione costi indiretti proporzionale al numero di contratti (${cp.nContratti})</p>
-        <div class="cost-result">
-          <div><span>Costo Totale Prodotto</span><strong>${formatEuro(cp.costoTotTrad)}</strong></div>
-          <div><span>Costo Unitario per Contratto</span><strong>${formatEuro(cp.costoUnitTrad)}</strong></div>
-        </div>
-      </div>
-      <div class="card highlight">
-        <h3>🔬 Metodo ABC (Activity Based Costing)</h3>
-        <p>Allocazione per attività con driver specifici</p>
-        <div class="abc-activities">
-          ${cp.attivitaABC.map(a => `<div class="abc-row"><span>${a.nome}</span><span class="abc-driver">${a.driver}</span><span>${formatEuro(a.costoPool)}</span></div>`).join("")}
-        </div>
-        <div class="cost-result">
-          <div><span>Costo Unitario ABC per Contratto</span><strong>${formatEuro(cp.costoUnitABC)}</strong></div>
-        </div>
-      </div>
-    </div>
-  `;
+  <div class="pg-hd"><h1>Overview</h1><p>Portafoglio contratti — 28/03/2026</p></div>
+  <div class="m-grid c3">
+    ${mce("fatt","Fatturato annuo",euro(k.fatturato_totale),euro(k.fatturato_freader),euro(k.fatturato_cutai),k.fatt_pct_freader,k.fatt_pct_cutai,k.mom_growth,k.yoy_growth,k.mom_fatt_freader,k.yoy_fatt_freader,k.mom_fatt_cutai,k.yoy_fatt_cutai)}
+    ${mce("marg","Margine operativo",euro(k.margine_totale)+" ("+pct(k.margine_pct)+")",euro(k.margine_freader)+" ("+pct(k.margine_pct_freader)+")",euro(k.margine_cutai)+" ("+pct(k.margine_pct_cutai)+")",Math.round(k.margine_freader/(k.margine_totale||1)*100),Math.round(k.margine_cutai/(k.margine_totale||1)*100),k.mom_margine,k.yoy_margine,2.1,14.8,3.2,19.1)}
+    ${mce("contr","Contratti attivi",num(k.attivi)+" / "+num(k.totale_contratti),num(k.attivi_freader)+" / "+num(k.contratti_freader),num(k.attivi_cutai)+" / "+num(k.contratti_cutai),Math.round(k.contratti_freader/k.totale_contratti*100),Math.round(k.contratti_cutai/k.totale_contratti*100),k.mom_contratti,k.yoy_contratti,1.5,10.0,2.2,14.5)}
+  </div>
+  <div class="m-grid c4">
+    ${mc("BEP",k.bep_contratti+" contratti",euro(k.bep_euro))}
+    ${mc("Revenue / contratto",euro(k.avg_fatturato))}
+    ${mc("In scadenza 90gg",num(k.in_scadenza_90),null,k.in_scadenza_90>0?"warn":"up")}
+    ${mc("Churn rate",pct(k.scaduti/k.totale_contratti*100),k.scaduti+" scaduti",k.scaduti>0?"down":null)}
+  </div>
+  <div class="g2">
+    <div class="card"><div class="card-hd"><h3>Prossime scadenze</h3></div><div class="card-bd">
+      <div class="exp-list">${exp&&exp.length?exp.map(c=>expRow(c)).join(''):'<span class="c-muted">Nessuna</span>'}</div>
+    </div></div>
+    <div class="card"><div class="card-hd"><h3>Crescita</h3></div><div class="card-bd">
+      <div class="grow-item"><div class="grow-top"><span class="grow-label">MoM</span><span class="grow-val up">+${k.mom_growth}%</span></div><div class="grow-bar"><div class="grow-fill" style="width:${Math.min(k.mom_growth*10,100)}%"></div></div></div>
+      <div class="grow-item"><div class="grow-top"><span class="grow-label">YoY</span><span class="grow-val up">+${k.yoy_growth}%</span></div><div class="grow-bar"><div class="grow-fill" style="width:${Math.min(k.yoy_growth*5,100)}%"></div></div></div>
+    </div></div>
+  </div>`;
+}
+function expRow(c){
+  const color=c.giorni_scadenza<=30?"c-danger":c.giorni_scadenza<=60?"c-warn":"c-safe";
+  const all=cache["/contracts"];
+  const idx=all?all.findIndex(x=>x.cliente===c.cliente&&x.prodotto===c.prodotto):-1;
+  return `<div class="exp-row" onclick="${idx>=0?`openDetail(${idx})`:''}"><div><div class="exp-days ${color}">${c.giorni_scadenza}</div><div class="exp-days-label">giorni</div></div><div><div class="exp-name">${c.cliente}</div><div class="exp-meta"><span>${c.sede}</span><span>${euro(c.canone_trim)}/trim</span></div></div><div class="exp-badge"><span class="b ${c.prodotto==='Freader'?'b-fr':'b-cu'}">${c.prodotto}</span></div></div>`;
 }
 
-function switchProdCosti(p) {
-  selectedProdottoCosti = p;
-  render();
-}
-
-
-// ============================================================
-// SEZIONE VENDITE & CONTRATTI
-// ============================================================
-function renderVendite() {
-  const tutti = getAllContratti();
-  const firmati = tutti.filter(c => c.giorniScadenza <= 0 || c.giorniScadenza > 0); // tutti
-  const conclusi = tutti.filter(c => c.giorniScadenza <= 0);
-  const inScadenza = tutti.filter(c => c.giorniScadenza > 0).sort((a, b) => a.giorniScadenza - b.giorniScadenza).slice(0, 3);
-
-  if (selectedContractIndex !== null) {
-    return renderAnalisiContratto(tutti[selectedContractIndex], tutti);
-  }
-
+// ══════════════════════════════════════════════
+// COSTS
+// ══════════════════════════════════════════════
+async function renderCosts(){
+  const d=await api("/costs/"+costProduct);
+  if(!d)return `<div class="pg-hd"><h1>Reparto Costi</h1><p>Backend non raggiungibile.</p></div>`;
   return `
-    <div class="section-header"><h2>Vendite & Contratti</h2></div>
-
-    <div class="kpi-row">
-      <div class="kpi-card"><span class="kpi-label">Contratti Totali</span><span class="kpi-value">${tutti.length}</span></div>
-      <div class="kpi-card"><span class="kpi-label">Contratti Attivi</span><span class="kpi-value green">${tutti.filter(c=>c.giorniScadenza>0).length}</span></div>
-      <div class="kpi-card"><span class="kpi-label">Contratti Scaduti</span><span class="kpi-value red">${conclusi.length}</span></div>
-      <div class="kpi-card"><span class="kpi-label">In Scadenza (90gg)</span><span class="kpi-value orange">${tutti.filter(c=>c.giorniScadenza>0&&c.giorniScadenza<=90).length}</span></div>
-    </div>
-
-    <div class="card" style="margin-top:20px">
-      <h3>⚠️ Top 3 Contratti in Scadenza</h3>
-      <div class="expiring-list">
-        ${inScadenza.map(c => {
-          const idx = tutti.indexOf(c);
-          return `<div class="expiring-card ${c.giorniScadenza<=30?'urgent':c.giorniScadenza<=60?'warning':'normal'}" onclick="openContract(${idx})">
-            <div class="exp-header">
-              <strong>${c.cliente}</strong>
-              <span class="badge-prod ${c.prodotto.toLowerCase()}">${c.prodotto}</span>
-            </div>
-            <div class="exp-details">
-              <span>📍 ${c.sede}</span>
-              <span>💰 ${formatEuro(c.canoneTrim)}/trim</span>
-              <span>📅 Scade: ${formatDate(c.scadenza)}</span>
-              <span class="days-left">${c.giorniScadenza} giorni</span>
-            </div>
-          </div>`;
-        }).join("")}
-      </div>
-    </div>
-
-    <div class="card" style="margin-top:20px">
-      <h3>📋 Tutti i Contratti Firmati</h3>
-      <table class="contracts-table">
-        <thead>
-          <tr><th>Cliente</th><th>Prodotto</th><th>Sede</th><th>Canone Trim.</th><th>Durata</th><th>Firma</th><th>Scadenza</th><th>Stato</th><th></th></tr>
-        </thead>
-        <tbody>
-          ${tutti.map((c, i) => `
-            <tr class="clickable-row" onclick="openContract(${i})">
-              <td><strong>${c.cliente}</strong></td>
-              <td><span class="badge-prod ${c.prodotto.toLowerCase()}">${c.prodotto}</span></td>
-              <td>${c.sede}</td>
-              <td>${formatEuro(c.canoneTrim)}</td>
-              <td>${c.durataMesi} mesi</td>
-              <td>${c.dataFirma}</td>
-              <td>${formatDate(c.scadenza)}</td>
-              <td><span class="status ${c.giorniScadenza>90?'active':c.giorniScadenza>0?'expiring':'expired'}">${c.giorniScadenza>90?'Attivo':c.giorniScadenza>0?'In scadenza':'Scaduto'}</span></td>
-              <td>🔍</td>
-            </tr>
-          `).join("")}
-        </tbody>
-      </table>
-    </div>
-  `;
+  <div class="pg-hd"><h1>Reparto Costi</h1>
+    <div class="seg"><button class="${costProduct==='prodotto1'?'on':''}" onclick="setCostProd('prodotto1')">Freader</button><button class="${costProduct==='prodotto2'?'on':''}" onclick="setCostProd('prodotto2')">CutAI</button><button class="${costProduct==='totale'?'on':''}" onclick="setCostProd('totale')">Totale</button></div>
+  </div>
+  <div class="m-grid c4">
+    ${mc("Costi fissi",euro(d.tot_fissi))}${mc("Costi variabili",euro(d.tot_variabili))}${mc("Costi diretti",euro(d.tot_diretti))}${mc("Costi indiretti",euro(d.tot_indiretti))}
+  </div>
+  ${costProduct==='totale'?`<div class="m-grid c2">${mc("Costo Freader",euro(d.costo_prodotto_freader))}${mc("Costo CutAI",euro(d.costo_prodotto_cutai))}</div>`:''}
+  ${costProduct!=='totale'&&d.fatturato_prodotto!=null?`<div class="m-grid c3">${mc("Costo prodotto",euro(d.costo_per_prodotto))}${mc("Fatturato",euro(d.fatturato_prodotto))}${mc("Margine",euro(d.margine_prodotto),null,d.margine_prodotto>0?"up":"down")}</div>`:''}
+  <div class="g2">
+    <div class="card"><div class="card-hd"><h3>Costi fissi</h3></div><div class="card-bd"><div class="t-wrap"><table><thead><tr><th>Voce</th><th>Importo</th><th>Tipo</th></tr></thead><tbody>${d.fissi.map(x=>`<tr><td>${x.voce}</td><td class="mono">${euro(x.importo)}</td><td><span class="b ${x.tipo==='diretto'?'b-dir':'b-ind'}">${x.tipo}</span></td></tr>`).join('')}</tbody></table></div></div></div>
+    <div class="card"><div class="card-hd"><h3>Costi variabili</h3></div><div class="card-bd"><div class="t-wrap"><table><thead><tr><th>Voce</th><th>Costo unit.</th><th>Tipo</th></tr></thead><tbody>${d.variabili.map(x=>`<tr><td>${x.voce}</td><td class="mono">${x.importo} ${x.unita||''}</td><td><span class="b ${x.tipo==='diretto'?'b-dir':'b-ind'}">${x.tipo}</span></td></tr>`).join('')}</tbody></table></div></div></div>
+  </div>
+  <div class="card mt-14"><div class="card-hd"><h3>Allocazione Tradizionale</h3></div><div class="card-bd">
+    <p style="font-size:.82rem;color:var(--ink-2);margin-bottom:8px">Costi indiretti su ${d.n_contratti} contratti</p>
+    <div class="cost-res"><div class="cost-line"><span>Costo totale</span><strong>${euro(d.costo_totale)}</strong></div><div class="cost-line"><span>Costo unit. / contratto</span><strong>${euro(d.costo_unit_trad)}</strong></div></div>
+  </div></div>`;
 }
 
-function openContract(idx) {
-  selectedContractIndex = idx;
-  render();
-}
-
-
-// ============================================================
-// ANALISI SINGOLO CONTRATTO
-// ============================================================
-function renderAnalisiContratto(c, tutti) {
-  const issues = analizzaContratto(c, tutti);
-  const alte = issues.filter(i => i.gravita === "alta");
-  const medie = issues.filter(i => i.gravita === "media");
-  const basse = issues.filter(i => i.gravita === "bassa");
-
+// ══════════════════════════════════════════════
+// CONTRACTS + ANOMALIES + MAP
+// ══════════════════════════════════════════════
+async function renderContracts(){
+  const all=await api("/contracts"),exp=await api("/expiring"),mapData=await api("/map-data"),anom=await api("/anomalies");
+  if(!all)return `<div class="pg-hd"><h1>Contratti</h1><p>Backend non raggiungibile.</p></div>`;
+  const attivi=all.filter(c=>c.giorni_scadenza>0).length,scaduti=all.filter(c=>c.giorni_scadenza<=0).length,inScad=all.filter(c=>c.giorni_scadenza>0&&c.giorni_scadenza<=90).length;
+  const anomAlte=anom?anom.filter(a=>a.gravita==="alta"):[];
   return `
-    <div class="section-header">
-      <button class="back-btn" onclick="navigate('vendite')">← Torna ai contratti</button>
-      <h2>Analisi Contratto: ${c.cliente}</h2>
-      <span class="badge-prod ${c.prodotto.toLowerCase()}">${c.prodotto}</span>
-    </div>
-
-    <div class="kpi-row">
-      <div class="kpi-card"><span class="kpi-label">Canone Trimestrale</span><span class="kpi-value">${formatEuro(c.canoneTrim)}</span></div>
-      <div class="kpi-card"><span class="kpi-label">Fatturato Annuo</span><span class="kpi-value">${formatEuro(c.fatturatoAnnuo)}</span></div>
-      <div class="kpi-card"><span class="kpi-label">Durata</span><span class="kpi-value">${c.durataMesi} mesi</span></div>
-      <div class="kpi-card"><span class="kpi-label">Giorni alla Scadenza</span><span class="kpi-value ${c.giorniScadenza<=30?'red':c.giorniScadenza<=90?'orange':'green'}">${c.giorniScadenza>0?c.giorniScadenza:'SCADUTO'}</span></div>
-    </div>
-
-    <div class="two-col" style="margin-top:20px">
-      <div class="card">
-        <h3>📄 Dettagli Contratto</h3>
-        <div class="detail-grid">
-          <div><span>Cliente</span><strong>${c.cliente}</strong></div>
-          <div><span>Sede</span><strong>${c.sede}</strong></div>
-          <div><span>Data Firma</span><strong>${c.dataFirma}</strong></div>
-          <div><span>Scadenza</span><strong>${formatDate(c.scadenza)}</strong></div>
-          <div><span>Preavviso Disdetta</span><strong>${c.preavvisoGG} giorni</strong></div>
-          <div><span>Credito Uptime</span><strong>${c.creditoUptime}%</strong></div>
-          <div><span>Credito Ticketing</span><strong>${c.creditoTicketing}%</strong></div>
-          <div><span>Tetto Crediti</span><strong>${c.tettoCred}%</strong></div>
-          ${c.profilo ? `<div><span>Profilo</span><strong>${c.profilo}</strong></div>` : ''}
-          ${c.utentiInclusi ? `<div><span>Utenti Inclusi</span><strong>${c.utentiInclusi}</strong></div>` : ''}
-          ${c.feeExtra ? `<div><span>Fee Utente Extra</span><strong>${formatEuro(c.feeExtra)}/mese</strong></div>` : ''}
-          ${c.prezzoF1 ? `<div><span>Prezzo Fascia 1</span><strong>${c.prezzoF1} cent/pag</strong></div>` : ''}
-          ${c.prezzoF2 ? `<div><span>Prezzo Fascia 2</span><strong>${c.prezzoF2} cent/pag</strong></div>` : ''}
-          ${c.prezzoF3 ? `<div><span>Prezzo Fascia 3</span><strong>${c.prezzoF3} cent/pag</strong></div>` : ''}
-        </div>
-      </div>
-
-      <div class="card">
-        <h3>🔎 Analisi Criticità</h3>
-        <div class="issues-summary">
-          <span class="issue-count alta">${alte.length} Alta</span>
-          <span class="issue-count media">${medie.length} Media</span>
-          <span class="issue-count bassa">${basse.length} Bassa</span>
-        </div>
-        <div class="issues-list">
-          ${issues.map(i => `
-            <div class="issue-item ${i.gravita}">
-              <div class="issue-header">
-                <span class="issue-badge ${i.gravita}">${i.gravita === 'alta' ? '🔴' : i.gravita === 'media' ? '🟡' : '🟢'} ${i.gravita.toUpperCase()}</span>
-                <span class="issue-section">${i.sezione}</span>
-              </div>
-              <p>${i.desc}</p>
-            </div>
-          `).join("")}
-        </div>
-      </div>
-    </div>
-  `;
+  <div class="pg-hd"><h1>Contratti</h1><p>${all.length} contratti</p></div>
+  <div class="m-grid c4">${mc("Totale",num(all.length))}${mc("Attivi",num(attivi),null,"up")}${mc("Scaduti",num(scaduti),null,scaduti>0?"down":null)}${mc("Anomalie",num(anom?anom.length:0),anomAlte.length+" critiche",anomAlte.length>0?"down":null)}</div>
+  ${anom&&anom.length?`<div class="card"><div class="card-hd"><h3>${IC.bell} Anomalie pagamenti</h3><span class="b b-err">${anomAlte.length} critiche</span></div><div class="card-bd"><div class="i-list">${anom.map(a=>`<div class="i-row ${a.gravita}"><div class="i-sev"></div><div class="i-body"><div class="i-head"><span class="b ${a.gravita==='alta'?'b-err':a.gravita==='media'?'b-wrn':'b-ok'}">${a.gravita.toUpperCase()}</span><span class="i-section">${a.tipo.replace(/_/g,' ')}</span><span class="c-muted" style="margin-left:auto;font-size:.72rem">${a.data_evento}</span></div><p class="i-desc"><strong>${a.cliente}</strong> (${a.prodotto}) — ${a.desc}</p></div></div>`).join('')}</div></div></div>`:''}
+  <div class="g2">
+    <div>${exp&&exp.length?`<div class="card"><div class="card-hd"><h3>Prossime scadenze</h3></div><div class="card-bd"><div class="exp-list">${exp.map(c=>expRow(c)).join('')}</div></div></div>`:''}</div>
+    <div class="card"><div class="card-hd"><h3>Distribuzione geografica</h3></div><div class="card-bd">${renderMap(mapData)}</div></div>
+  </div>
+  <div class="card mt-14"><div class="card-hd"><h3>Tutti i contratti</h3></div><div class="t-wrap"><table>
+    <thead><tr><th>Cliente</th><th>Prodotto</th><th>Sede</th><th>Canone</th><th>Durata</th><th>Firma</th><th>Scadenza</th><th>Stato</th><th></th></tr></thead>
+    <tbody>${all.map((c,i)=>{const st=c.giorni_scadenza>90?"active":c.giorni_scadenza>0?"expiring":"expired";const sl=st==="active"?"Attivo":st==="expiring"?"In scadenza":"Scaduto";const sb=st==="active"?"b-ok":st==="expiring"?"b-wrn":"b-err";const hasAnom=anom&&anom.find(a=>a.cliente===c.cliente);return `<tr onclick="openDetail(${i})"${hasAnom?' style="background:var(--danger-bg)"':''}><td style="font-weight:600">${c.cliente}${hasAnom?' ⚠️':''}</td><td><span class="b ${c.prodotto==='Freader'?'b-fr':'b-cu'}">${c.prodotto}</span></td><td>${c.sede}</td><td class="mono">${euro(c.canone_trim)}</td><td class="mono">${c.durata_mesi}m</td><td class="mono">${c.data_firma}</td><td class="mono">${c.scadenza}</td><td><span class="b ${sb}">${sl}</span></td><td style="color:var(--ink-3)">${IC.ext}</td></tr>`;}).join('')}</tbody>
+  </table></div></div>`;
+}
+function renderMap(data){
+  if(!data||!data.length)return '<span class="c-muted">Nessun dato</span>';
+  const W=300,H=340;
+  function proj(lat,lng){return [(lng-6.5)/(18.5-6.5)*W,(1-(lat-36)/(47-36))*H];}
+  const mx=Math.max(...data.map(d=>d.count));
+  const dots=data.map(d=>{const[x,y]=proj(d.lat,d.lng);const r=Math.max(6,Math.min(18,d.count/mx*18));return `<g class="map-dot"><circle cx="${x}" cy="${y}" r="${r}" fill="var(--accent)" opacity=".18"/><circle cx="${x}" cy="${y}" r="${Math.max(3,r*.5)}" fill="var(--accent)" opacity=".7"/><title>${d.citta}: ${d.count}</title></g><text x="${x}" y="${y-r-3}" text-anchor="middle" fill="var(--ink-2)" font-size="9" font-weight="600">${d.citta}</text>`;}).join('');
+  const outline=`<path d="M140 20C155 15,175 18,185 30C195 42,200 55,195 70C190 85,200 95,210 105C220 115,235 120,245 135C255 150,260 165,255 180C250 195,240 205,235 220C230 235,225 245,215 255C205 265,195 270,185 280C175 290,170 300,160 310C150 320,140 325,130 320C120 315,115 305,120 295C125 285,130 275,125 265C120 255,110 250,105 240C100 230,95 220,90 210C85 200,80 190,85 180C90 170,95 160,100 150C105 140,100 130,95 120C90 110,85 100,90 90C95 80,100 70,110 60C120 50,125 35,140 20Z" fill="none" stroke="var(--border)" stroke-width="1.5"/>`;
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-height:280px">${outline}${dots}</svg><div class="map-legend">${data.sort((a,b)=>b.count-a.count).slice(0,6).map(d=>`<span class="map-leg-item"><span class="map-leg-dot"></span>${d.citta} <strong>${d.count}</strong></span>`).join('')}</div>`;
 }
 
-
-// ============================================================
-// SEZIONE PERFORMANCE
-// ============================================================
-function renderPerformance() {
-  const kpi = calcolaKPI();
-
+// ══════════════════════════════════════════════
+// CONTRACT DETAIL (editable)
+// ══════════════════════════════════════════════
+async function renderDetail(){
+  const d=await api("/contracts/"+selectedIdx);
+  if(!d)return `<div class="pg-hd"><button class="btn-back" onclick="backToContracts()">${IC.arrow} Indietro</button></div><p>Errore.</p>`;
+  const c=d.contract,issues=d.issues;
+  const alta=issues.filter(i=>i.gravita==="alta").length,media=issues.filter(i=>i.gravita==="media").length,bassa=issues.filter(i=>i.gravita==="bassa").length;
+  const fields=[{key:"sede",label:"Sede",type:"text"},{key:"canone_trim",label:"Canone trim.",type:"number"},{key:"durata_mesi",label:"Durata (mesi)",type:"number"},{key:"preavviso_gg",label:"Preavviso (gg)",type:"number"},{key:"credito_uptime",label:"Credito uptime %",type:"number"},{key:"credito_ticketing",label:"Credito ticketing %",type:"number"},{key:"tetto_cred",label:"Tetto crediti %",type:"number"}];
+  if(c.prezzo_f1!=null)fields.push({key:"prezzo_f1",label:"Fascia 1",type:"number"},{key:"prezzo_f2",label:"Fascia 2",type:"number"},{key:"prezzo_f3",label:"Fascia 3",type:"number"});
+  if(c.utenti_inclusi!=null)fields.push({key:"utenti_inclusi",label:"Utenti inclusi",type:"number"},{key:"fee_extra",label:"Fee extra €",type:"number"});
   return `
-    <div class="section-header"><h2>Analisi Performance</h2></div>
-
-    <div class="kpi-row">
-      <div class="kpi-card big"><span class="kpi-label">Fatturato Totale Annuo</span><span class="kpi-value">${formatEuro(kpi.fattTot)}</span></div>
-      <div class="kpi-card big"><span class="kpi-label">Margine Operativo</span><span class="kpi-value ${kpi.marginePct>0?'green':'red'}">${formatEuro(kpi.margine)}</span><span class="kpi-sub">${kpi.marginePct.toFixed(1)}%</span></div>
-      <div class="kpi-card big"><span class="kpi-label">Break Even Point</span><span class="kpi-value">${kpi.bepContratti} contratti</span><span class="kpi-sub">${formatEuro(kpi.bepEuro)}</span></div>
-    </div>
-
-    <div class="kpi-row" style="margin-top:15px">
-      <div class="kpi-card"><span class="kpi-label">Fatturato Freader</span><span class="kpi-value">${formatEuro(kpi.fattP1)}</span></div>
-      <div class="kpi-card"><span class="kpi-label">Fatturato CutAI</span><span class="kpi-value">${formatEuro(kpi.fattP2)}</span></div>
-      <div class="kpi-card"><span class="kpi-label">Costi Totali</span><span class="kpi-value">${formatEuro(kpi.costiTotali)}</span></div>
-      <div class="kpi-card"><span class="kpi-label">Fatt. Medio/Contratto</span><span class="kpi-value">${formatEuro(kpi.avgFattPerContratto)}</span></div>
-    </div>
-
-    <div class="kpi-row" style="margin-top:15px">
-      <div class="kpi-card"><span class="kpi-label">Contratti Totali</span><span class="kpi-value">${kpi.totContratti}</span></div>
-      <div class="kpi-card"><span class="kpi-label">Contratti Attivi</span><span class="kpi-value green">${kpi.attivi}</span></div>
-      <div class="kpi-card"><span class="kpi-label">Contratti Scaduti</span><span class="kpi-value red">${kpi.scaduti}</span></div>
-      <div class="kpi-card"><span class="kpi-label">In Scadenza (90gg)</span><span class="kpi-value orange">${kpi.inScadenza90}</span></div>
-    </div>
-
-    <div class="two-col" style="margin-top:20px">
-      <div class="card highlight">
-        <h3>📊 Crescita</h3>
-        <div class="growth-metrics">
-          <div class="growth-item">
-            <span class="growth-label">MoM (Month over Month)</span>
-            <span class="growth-value positive">+${kpi.momGrowth}%</span>
-            <div class="growth-bar"><div class="growth-fill" style="width:${Math.min(kpi.momGrowth*10,100)}%"></div></div>
-          </div>
-          <div class="growth-item">
-            <span class="growth-label">YoY (Year over Year)</span>
-            <span class="growth-value positive">+${kpi.yoyGrowth}%</span>
-            <div class="growth-bar"><div class="growth-fill" style="width:${Math.min(kpi.yoyGrowth*5,100)}%"></div></div>
-          </div>
+  <div class="pg-hd"><button class="btn-back" onclick="backToContracts()">${IC.arrow} Contratti</button><h1>${c.cliente}</h1><span class="b ${c.prodotto==='Freader'?'b-fr':'b-cu'}">${c.prodotto}</span></div>
+  <div class="m-grid c4">${mc("Canone trim.",euro(c.canone_trim))}${mc("Fatt. annuo",euro(c.fatturato_annuo))}${mc("Durata",c.durata_mesi+" mesi")}${mc("Scadenza",c.giorni_scadenza>0?c.giorni_scadenza+" gg":"SCADUTO",null,c.giorni_scadenza<=0?"down":c.giorni_scadenza<=90?"warn":"up")}</div>
+  <div class="g2">
+    <div class="card"><div class="card-hd"><h3>Modifica contratto</h3></div><div class="card-bd">
+      <form id="edit-form" onsubmit="saveContract(event,${selectedIdx})">
+        <div class="edit-grid">
+          <div class="d-item"><div class="d-label">Cliente</div><div class="d-val text">${c.cliente}</div></div>
+          <div class="d-item"><div class="d-label">Data firma</div><div class="d-val">${c.data_firma}</div></div>
+          <div class="d-item"><div class="d-label">Scadenza</div><div class="d-val">${c.scadenza}</div></div>
+          ${c.profilo?`<div class="d-item"><div class="d-label">Profilo</div><div class="d-val text">${c.profilo}</div></div>`:''}
+          ${fields.map(f=>`<div class="edit-field"><label>${f.label}</label><input type="${f.type}" name="${f.key}" value="${c[f.key]}" ${f.type==='number'?'step="any"':''}></div>`).join('')}
         </div>
-      </div>
-      <div class="card highlight">
-        <h3>📋 Riepilogo KPI</h3>
-        <div class="kpi-summary-list">
-          <div class="kpi-summary-row"><span>Margine Lordo</span><strong>${kpi.marginePct.toFixed(1)}%</strong></div>
-          <div class="kpi-summary-row"><span>Revenue per Contratto</span><strong>${formatEuro(kpi.avgFattPerContratto)}</strong></div>
-          <div class="kpi-summary-row"><span>Tasso Contratti Attivi</span><strong>${(kpi.attivi/kpi.totContratti*100).toFixed(0)}%</strong></div>
-          <div class="kpi-summary-row"><span>Churn Rate (scaduti)</span><strong>${(kpi.scaduti/kpi.totContratti*100).toFixed(1)}%</strong></div>
-          <div class="kpi-summary-row"><span>Contratti sopra BEP</span><strong>${kpi.totContratti > kpi.bepContratti ? 'Sì ✅' : 'No ❌'}</strong></div>
-          <div class="kpi-summary-row"><span>Mix Freader/CutAI</span><strong>${(kpi.fattP1/kpi.fattTot*100).toFixed(0)}% / ${(kpi.fattP2/kpi.fattTot*100).toFixed(0)}%</strong></div>
-        </div>
-      </div>
-    </div>
-  `;
+        <div style="margin-top:12px;display:flex;gap:8px;align-items:center"><button type="submit" class="btn-save">Salva</button><span id="save-msg" style="font-size:.78rem;color:var(--safe);display:none">Salvato ✓</span></div>
+      </form>
+    </div></div>
+    <div class="card"><div class="card-hd"><h3>Criticità</h3><div style="display:flex;gap:6px">${alta?`<span class="b b-err">${alta} Alta</span>`:''}${media?`<span class="b b-wrn">${media} Media</span>`:''}${bassa?`<span class="b b-ok">${bassa} Bassa</span>`:''}</div></div><div class="card-bd">
+      <div class="i-list">${issues.map(i=>`<div class="i-row ${i.gravita}"><div class="i-sev"></div><div class="i-body"><div class="i-head"><span class="b ${i.gravita==='alta'?'b-err':i.gravita==='media'?'b-wrn':'b-ok'}">${i.gravita.toUpperCase()}</span><span class="i-section">${i.sezione}</span></div><p class="i-desc">${i.desc}</p></div></div>`).join('')}</div>
+    </div></div>
+  </div>`;
+}
+async function saveContract(e,idx){
+  e.preventDefault();const fd=new FormData(document.getElementById("edit-form"));const body={};for(const[k,v]of fd.entries())body[k]=v;
+  cache={};const res=await api("/contracts/"+idx,{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+  if(res){const msg=document.getElementById("save-msg");if(msg){msg.style.display="inline";setTimeout(()=>msg.style.display="none",2000);}const main=document.querySelector(".main");if(main)main.innerHTML=await renderDetail();}
 }
 
-
-// ============================================================
-// SEZIONE TOP CLIENTS
-// ============================================================
-function renderTopClients() {
-  const ranked = calcolaTopClients();
-  const top10 = ranked.slice(0, 10);
-
+// ══════════════════════════════════════════════
+// TOP CLIENTS
+// ══════════════════════════════════════════════
+async function renderTopClients(){
+  const ranked=await api("/top-clients");
+  if(!ranked)return `<div class="pg-hd"><h1>Top Clients</h1><p>Backend non raggiungibile.</p></div>`;
   return `
-    <div class="section-header"><h2>Top Clients</h2></div>
-    <p class="section-desc">Rating basato su: canone, clausole contrattuali, durata, fiducia, scadenza e termini.</p>
-
-    <div class="top-clients-grid">
-      ${top10.map((c, i) => `
-        <div class="client-card rank-${i < 3 ? 'top' : 'normal'}" onclick="openContract(${getAllContratti().findIndex(x => x.cliente === c.cliente && x.prodotto === c.prodotto)})">
-          <div class="client-rank">#${i + 1}</div>
-          <div class="client-info">
-            <div class="client-name">${c.cliente}</div>
-            <span class="badge-prod ${c.prodotto.toLowerCase()}">${c.prodotto}</span>
-            <div class="client-details">
-              <span>📍 ${c.sede}</span>
-              <span>💰 ${formatEuro(c.canoneTrim)}/trim</span>
-              <span>📅 ${c.durataMesi} mesi</span>
-            </div>
-          </div>
-          <div class="client-rating">
-            <div class="rating-circle" style="--rating:${c.rating}">
-              <span>${c.rating}</span>
-            </div>
-            <span class="rating-label">${c.rating >= 85 ? 'Eccellente' : c.rating >= 70 ? 'Buono' : c.rating >= 55 ? 'Nella media' : 'Da migliorare'}</span>
-          </div>
-          <div class="client-terms">
-            <div><span>Credito Uptime</span><strong class="${c.creditoUptime<=5?'green':c.creditoUptime<=7?'orange':'red'}">${c.creditoUptime}%</strong></div>
-            <div><span>Tetto Crediti</span><strong class="${c.tettoCred<=10?'green':c.tettoCred<=13?'orange':'red'}">${c.tettoCred}%</strong></div>
-            <div><span>Preavviso</span><strong>${c.preavvisoGG}gg</strong></div>
-            <div><span>Scadenza</span><strong class="${c.giorniScadenza<=0?'red':c.giorniScadenza<=90?'orange':'green'}">${c.giorniScadenza>0?c.giorniScadenza+'gg':'Scaduto'}</strong></div>
-          </div>
-        </div>
-      `).join("")}
-    </div>
-  `;
+  <div class="pg-hd"><h1>Top Clients</h1><p>Rating: canone, clausole, durata, fiducia, termini</p></div>
+  <div class="cl-list">${ranked.map((c,i)=>{
+    const sc=c.rating>=85?"c-safe":c.rating>=70?"c-warn":"c-danger";
+    const sl=c.rating>=85?"Eccellente":c.rating>=70?"Buono":c.rating>=55?"Nella media":"Da migliorare";
+    return `<div class="cl-row" onclick="openDetail(${c.index})">
+      <div class="cl-rank">${i+1}</div>
+      <div><div class="cl-name">${c.cliente} <span class="b ${c.prodotto==='Freader'?'b-fr':'b-cu'}" style="margin-left:6px">${c.prodotto}</span></div><div class="cl-sub">${c.sede} · ${euro(c.canone_trim)}/trim · ${c.durata_mesi}m</div></div>
+      <div class="cl-score"><div class="sc-num ${sc}">${c.rating}</div><div class="sc-label">${sl}</div></div>
+      <div class="cl-terms">
+        <div class="ct-item"><div class="ct-label">Uptime</div><div class="ct-val ${c.credito_uptime<=5?'c-safe':c.credito_uptime<=7?'c-warn':'c-danger'}">${c.credito_uptime}%</div></div>
+        <div class="ct-item"><div class="ct-label">Tetto</div><div class="ct-val ${c.tetto_cred<=10?'c-safe':c.tetto_cred<=13?'c-warn':'c-danger'}">${c.tetto_cred}%</div></div>
+        <div class="ct-item"><div class="ct-label">Preavviso</div><div class="ct-val">${c.preavviso_gg}gg</div></div>
+        <div class="ct-item"><div class="ct-label">Scadenza</div><div class="ct-val ${c.giorni_scadenza<=0?'c-danger':c.giorni_scadenza<=90?'c-warn':'c-safe'}">${c.giorni_scadenza>0?c.giorni_scadenza+'gg':'Scaduto'}</div></div>
+      </div>
+    </div>`;}).join('')}</div>`;
 }
 
-// ============================================================
-// INIT
-// ============================================================
-document.addEventListener("DOMContentLoaded", () => {
-  render();
+// ══════════════════════════════════════════════
+// AI ADVISOR
+// ══════════════════════════════════════════════
+async function renderAdvisor(){
+  const advice=await api("/ai-advice");
+  if(!advice)return `<div class="pg-hd"><h1>AI Advisor</h1><p>Backend non raggiungibile.</p></div>`;
+  const priColors={alta:"b-err",media:"b-wrn",bassa:"b-ok"};
+  const catIcons={Diversificazione:"📊",Retention:"🔄","Credit Risk":"💳",Pricing:"💰",Pipeline:"📋",Crescita:"📈",Legal:"⚖️"};
+  return `
+  <div class="pg-hd"><h1>AI Advisor</h1><p>Consigli basati sull'analisi del portafoglio</p></div>
+  <div class="advice-list">${advice.map(a=>`
+    <div class="advice-card">
+      <div class="advice-top">
+        <span class="advice-cat">${catIcons[a.categoria]||'💡'} ${a.categoria}</span>
+        <span class="b ${priColors[a.priorita]}">${a.priorita.toUpperCase()}</span>
+      </div>
+      <h4 class="advice-title">${a.titolo}</h4>
+      <p class="advice-desc">${a.desc}</p>
+      <div class="advice-action">
+        <span class="advice-action-label">Azione consigliata</span>
+        <p>${a.azione}</p>
+      </div>
+    </div>
+  `).join('')}</div>`;
+}
+
+// ── INIT ──
+document.addEventListener("DOMContentLoaded",()=>{
+  api("/contracts").then(()=>render());
+  checkAndNotify();
 });

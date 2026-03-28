@@ -146,9 +146,15 @@
 
             <ul class="nav-links">
                 <li>
-                    <a href="#" class="nav-link active" data-view="dashboard" id="nav-dashboard">
+                    <a href="#" class="nav-link active" data-view="overview" id="nav-overview">
                         <i class="ri-dashboard-3-line"></i>
-                        <span>Dashboard</span>
+                        <span>Overview</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-link" data-view="costs" id="nav-costs">
+                        <i class="ri-line-chart-line"></i>
+                        <span>Reparto Costi</span>
                     </a>
                 </li>
                 <li>
@@ -159,8 +165,20 @@
                 </li>
                 <li>
                     <a href="#" class="nav-link" data-view="contracts" id="nav-contracts">
-                        <i class="ri-file-list-3-line"></i>
+                        <i class="ri-folder-shield-2-line"></i>
                         <span>Contratti</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-link" data-view="topclients" id="nav-topclients">
+                        <i class="ri-vip-crown-2-line"></i>
+                        <span>Top Clients</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-link" data-view="advisor" id="nav-advisor">
+                        <i class="ri-brain-line"></i>
+                        <span>AI Advisor</span>
                     </a>
                 </li>
             </ul>
@@ -192,54 +210,56 @@
                 </div>
             </header>
 
-            <!-- VIEW: DASHBOARD -->
-            <section class="view active" id="view-dashboard">
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon stat-icon--blue"><i class="ri-file-text-line"></i></div>
-                        <div class="stat-info">
-                            <span class="stat-value" id="stat-total">—</span>
-                            <span class="stat-label">Contratti Totali</span>
+            <!-- VIEW: OVERVIEW -->
+            <section class="view active" id="view-overview">
+                <div class="stats-grid" id="kpi-grid">
+                    <!-- KPI Popolati da JS -->
+                </div>
+
+                <div class="dashboard-split" style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; margin-top: 1.5rem;">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2><i class="ri-list-check-2"></i> Ultime Attività</h2>
+                            <button class="btn btn--ghost" id="btn-refresh-overview">
+                                <i class="ri-refresh-line"></i> Aggiorna
+                            </button>
+                        </div>
+                        <div class="card-body" id="overview-table-body">
+                            <!-- Popolato da JS -->
                         </div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-icon stat-icon--green"><i class="ri-check-double-line"></i></div>
-                        <div class="stat-info">
-                            <span class="stat-value" id="stat-active">—</span>
-                            <span class="stat-label">Attivi</span>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <h2><i class="ri-alarm-warning-line"></i> Prossime Scadenze</h2>
                         </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon stat-icon--purple"><i class="ri-robot-2-line"></i></div>
-                        <div class="stat-info">
-                            <span class="stat-value" id="stat-freader">—</span>
-                            <span class="stat-label">Freader</span>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon stat-icon--orange"><i class="ri-scissors-cut-line"></i></div>
-                        <div class="stat-info">
-                            <span class="stat-value" id="stat-cutai">—</span>
-                            <span class="stat-label">CutAI</span>
+                        <div class="card-body" id="expiring-list">
+                            <!-- Popolato da JS -->
                         </div>
                     </div>
                 </div>
-
-                <div class="card">
-                    <div class="card-header">
-                        <h2><i class="ri-list-check-2"></i> Ultimi Contratti</h2>
-                        <button class="btn btn--ghost" id="btn-refresh-dashboard">
-                            <i class="ri-refresh-line"></i> Aggiorna
-                        </button>
+            </section>
+            
+            <!-- VIEW: REPARTO COSTI -->
+            <section class="view" id="view-costs">
+                <div class="segmented-control" id="costs-segment">
+                    <button class="seg-btn active" data-prod="totale">Totale Portafoglio</button>
+                    <button class="seg-btn" data-prod="freader">Piattaforma Freader</button>
+                    <button class="seg-btn" data-prod="cutai">Piattaforma CutAI</button>
+                </div>
+                
+                <div class="stats-grid" id="costs-kpi-grid" style="margin-top:1.5rem;">
+                    <!-- Costi KPI da JS -->
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 1.5rem;">
+                    <div class="card">
+                        <div class="card-header"><h2><i class="ri-money-euro-box-line"></i> Costi Fissi</h2></div>
+                        <div class="card-body" id="costi-fissi-table"></div>
                     </div>
-                    <div class="card-body" id="dashboard-table-body">
-                        <div class="empty-state">
-                            <i class="ri-inbox-line"></i>
-                            <p>Nessun contratto caricato</p>
-                            <button class="btn btn--primary" onclick="switchView('upload')">
-                                <i class="ri-upload-cloud-2-line"></i> Carica il primo contratto
-                            </button>
-                        </div>
+                    <div class="card">
+                        <div class="card-header"><h2><i class="ri-line-chart-line"></i> Costi Variabili</h2></div>
+                        <div class="card-body" id="costi-variabili-table"></div>
                     </div>
                 </div>
             </section>
@@ -351,22 +371,63 @@
 
             <!-- VIEW: CONTRACTS LIST -->
             <section class="view" id="view-contracts">
-                <div class="card">
-                    <div class="card-header">
-                        <h2><i class="ri-file-list-3-line"></i> Tutti i Contratti</h2>
-                        <div class="card-header-actions">
-                            <div class="search-box">
-                                <i class="ri-search-line"></i>
-                                <input type="text" id="search-contracts" placeholder="Cerca cliente...">
+                <div class="stats-grid" id="contracts-kpi-grid">
+                    <!-- KPI contratti popolato da JS -->
+                </div>
+                
+                <div id="anomalies-container" style="margin-bottom: 1.5rem;"></div>
+
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2><i class="ri-file-list-3-line"></i> Tutti i Contratti</h2>
+                            <div class="card-header-actions">
+                                <div class="search-box">
+                                    <i class="ri-search-line"></i>
+                                    <input type="text" id="search-contracts" placeholder="Cerca cliente...">
+                                </div>
+                                <button class="btn btn--ghost" id="btn-refresh-contracts"><i class="ri-refresh-line"></i></button>
                             </div>
-                            <button class="btn btn--ghost" id="btn-refresh-contracts"><i class="ri-refresh-line"></i></button>
+                        </div>
+                        <div class="card-body" id="contracts-table-body">
+                            <div class="empty-state">
+                                <i class="ri-inbox-line"></i>
+                                <p>Nessun contratto trovato</p>
+                            </div>
                         </div>
                     </div>
-                    <div class="card-body" id="contracts-table-body">
-                        <div class="empty-state">
-                            <i class="ri-inbox-line"></i>
-                            <p>Nessun contratto trovato</p>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <h2><i class="ri-map-pin-line"></i> Mappa Geografica</h2>
                         </div>
+                        <div class="card-body" id="map-container" style="min-height: 300px; position:relative; display:flex; align-items:center; justify-content:center;">
+                            <!-- Mappa SVG popolata da JS -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- VIEW: TOP CLIENTS -->
+            <section class="view" id="view-topclients">
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="ri-medal-line"></i> Classifica Portfolio Clienti</h2>
+                    </div>
+                    <div class="card-body" id="topclients-container">
+                        <!-- Popolato da JS -->
+                    </div>
+                </div>
+            </section>
+            
+            <!-- VIEW: AI ADVISOR -->
+            <section class="view" id="view-advisor">
+                <div class="card" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.05)); border-color: rgba(99, 102, 241, 0.3);">
+                    <div class="card-header" style="border-bottom-color: rgba(99, 102, 241, 0.2);">
+                        <h2 style="color: var(--accent-hover);"><i class="ri-brain-line"></i> Consigli Strategici AI</h2>
+                    </div>
+                    <div class="card-body" id="advisor-container" style="display:flex; flex-direction:column; gap:1rem;">
+                        <!-- Popolato da JS -->
                     </div>
                 </div>
             </section>

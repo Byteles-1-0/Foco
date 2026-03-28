@@ -1543,3 +1543,81 @@ code {
         align-items: center;
     }
 }
+
+/* ============ CONTRACTIQ DASHBOARD EXTENTIONS ============ */
+.segmented-control {
+    display: inline-flex;
+    background: var(--bg-input);
+    padding: 0.35rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    gap: 0.25rem;
+}
+
+.seg-btn {
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    transition: all var(--transition-fast);
+}
+
+.seg-btn:hover {
+    color: var(--text-primary);
+}
+
+.seg-btn.active {
+    background: var(--gradient-primary);
+    color: white;
+    box-shadow: var(--shadow-glow);
+}
+
+.anomalies-list { display: flex; flex-direction: column; gap: 0.5rem; }
+.anomaly-item {
+    padding: 0.75rem 1rem; 
+    border-radius: var(--radius-sm);
+    display: flex; 
+    align-items: center; 
+    gap: 1rem;
+    background: rgba(255, 255, 255, 0.03); 
+    border-left: 4px solid var(--text-tertiary);
+}
+.anomaly-item.hs-alta { border-left-color: var(--color-danger); background: var(--color-danger-bg); }
+.anomaly-item.hs-media { border-left-color: var(--color-warning); background: var(--color-warning-bg); }
+.anomaly-item.hs-bassa { border-left-color: var(--color-success); background: var(--color-success-bg); }
+
+.a-title { font-weight: 600; font-size: 0.9rem; color: var(--text-primary); }
+.a-desc { font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.2rem; }
+.a-client { font-size: 0.75rem; color: var(--text-tertiary); font-weight: 600; }
+
+.map-dot {
+    cursor: pointer;
+    transition: all 0.3s;
+}
+.map-dot:hover {
+    filter: drop-shadow(0 0 8px var(--accent-glow));
+}
+
+.rank-number {
+    font-size: 1.2rem; font-weight: 800; color: var(--text-tertiary); width: 30px; text-align: center;
+}
+.rank-score {
+    padding: 0.2rem 0.5rem; border-radius: 100px; font-weight: 700; font-size: 0.8rem;
+    background: rgba(255,255,255,0.05); color: var(--text-primary); border: 1px solid var(--border-color);
+}
+
+.advisor-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255,255,255,0.04);
+    border-radius: var(--radius-md);
+    padding: 1.25rem;
+    display: flex; gap: 1rem;
+    transition: border 0.3s;
+}
+.advisor-card:hover { border-color: rgba(99, 102, 241, 0.4); }
+.adv-icon { font-size: 2rem; color: var(--accent); }
+.adv-content { flex: 1; }
+.adv-title { font-size: 1.05rem; font-weight: 600; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
+.adv-desc { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 0.75rem; }
+.adv-action { background: rgba(0,0,0,0.2); border-radius: var(--radius-sm); padding: 0.75rem; font-size: 0.8rem; font-weight: 500; color: var(--accent-hover); border-left: 2px solid var(--accent); }

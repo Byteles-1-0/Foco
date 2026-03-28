@@ -232,14 +232,31 @@ function switchView(viewName) {
     $(`#view-${viewName}`).classList.add('active');
 
     const titles = {
+        overview: 'Overview',
+        costs: 'Reparto Costi',
         dashboard: 'Dashboard',
         upload: 'Carica Contratto',
         contracts: 'Contratti',
+        topclients: 'Top Clients',
+        advisor: 'AI Advisor',
         detail: 'Dettaglio Contratto'
     };
     $('#page-title').textContent = titles[viewName] || 'FOCO';
 
-    if (viewName === 'dashboard' || viewName === 'contracts') {
+    if (viewName === 'overview') {
+        renderOverview();
+    } else if (viewName === 'costs') {
+        renderCosts('totale');
+    } else if (viewName === 'contracts') {
+        loadContracts().then(() => {
+            renderContractsKpiAndAnomalies();
+            renderMap();
+        });
+    } else if (viewName === 'topclients') {
+        renderTopClients();
+    } else if (viewName === 'advisor') {
+        renderAdvisor();
+    } else if (viewName === 'dashboard') {
         loadContracts();
     }
 
@@ -423,6 +440,9 @@ async function loadContracts() {
         if (res.ok && data.status === 'success') {
             renderDashboard(data.data);
             renderContractsTable(data.data);
+            if ($('#view-overview').classList.contains('active')) {
+                renderOverview();
+            }
         }
     } catch (err) {
         console.error('Errore caricamento contratti:', err);
@@ -676,3 +696,293 @@ function showToast(message, type = 'info') {
 }
 
 window.loadContractDetail = loadContractDetail;
+
+// ============================================
+// CONTRACTIQ MOCK DATA & RENDERERS
+// ============================================
+
+// --- MOCK DATA ---
+const MOCK_DATA = {
+    overviewKpi: [
+        { title: 'Fatturato Annuo', value: '€ 1.2M', desc: '+15% YoY', color: 'blue', icon: 'ri-money-euro-circle-line' },
+        { title: 'Margine Operativo', value: '42%', desc: '+3% MoM', color: 'green', icon: 'ri-line-chart-line' },
+        { title: 'Contratti Attivi', value: '1,420', desc: '14 in scadenza', color: 'purple', icon: 'ri-check-double-line' },
+        { title: 'Churn Rate', value: '2.1%', desc: '-0.5% YoY', color: 'orange', icon: 'ri-user-unfollow-line' }
+    ],
+    expiring: [
+        { client: 'TechCorp Srl', days: 12, value: '€ 4.5k/trim', prod: 'Freader' },
+        { client: 'Acme Group', days: 28, value: '€ 12k/trim', prod: 'CutAI' },
+        { client: 'Global Retail', days: 45, value: '€ 2.1k/trim', prod: 'Freader' }
+    ],
+    costs: {
+        totale: {
+            kpi: [
+                { title: 'Costi Fissi', value: '€ 120k', color: 'blue', icon: 'ri-building-line' },
+                { title: 'Costi Variabili', value: '€ 45k', color: 'orange', icon: 'ri-arrow-up-down-line' },
+                { title: 'Costo Medio / Contratto', value: '€ 116', color: 'green', icon: 'ri-pie-chart-line' }
+            ],
+            fissi: [
+                { voce: 'Server & Infrastruttura', importo: '€ 50,000', tipo: 'Diretto' },
+                { voce: 'Personale R&D', importo: '€ 45,000', tipo: 'Indiretto' },
+                { voce: 'Licenze Software esterne', importo: '€ 25,000', tipo: 'Diretto' }
+            ],
+            variabili: [
+                { voce: 'Token API OpenAI', constMedio: '€ 0.05 / doc', tipo: 'Diretto' },
+                { voce: 'Storage AWS S3', constMedio: '€ 0.02 / GB', tipo: 'Diretto' },
+                { voce: 'Customer Success Support', constMedio: '€ 15.00 / tkt', tipo: 'Indiretto' }
+            ]
+        },
+        freader: {
+            kpi: [
+                { title: 'Costi Fissi', value: '€ 40k', color: 'blue', icon: 'ri-building-line' },
+                { title: 'Costi Variabili', value: '€ 15k', color: 'orange', icon: 'ri-arrow-up-down-line' },
+                { title: 'Costo Medio / Contratto', value: '€ 85', color: 'green', icon: 'ri-pie-chart-line' }
+            ],
+            fissi: [ { voce: 'Server OCR Dedicato', importo: '€ 15,000', tipo: 'Diretto' } ],
+            variabili: [ { voce: 'Librerie Parsing', constMedio: '€ 0.01 / doc', tipo: 'Diretto' } ]
+        },
+        cutai: {
+            kpi: [
+                { title: 'Costi Fissi', value: '€ 80k', color: 'blue', icon: 'ri-building-line' },
+                { title: 'Costi Variabili', value: '€ 30k', color: 'orange', icon: 'ri-arrow-up-down-line' },
+                { title: 'Costo Medio / Contratto', value: '€ 142', color: 'green', icon: 'ri-pie-chart-line' }
+            ],
+            fissi: [ { voce: 'Cluster GPU AI', importo: '€ 60,000', tipo: 'Diretto' } ],
+            variabili: [ { voce: 'Token LLM HD', constMedio: '€ 0.15 / doc', tipo: 'Diretto' } ]
+        }
+    },
+    topClients: [
+        { rank: 1, name: 'Stark Industries', score: 98, level: 'Eccellente', canone: '€ 120k/anno' },
+        { rank: 2, name: 'Wayne Enterprises', score: 92, level: 'Eccellente', canone: '€ 95k/anno' },
+        { rank: 3, name: 'LexCorp', score: 75, level: 'Buono', canone: '€ 55k/anno' },
+        { rank: 4, name: 'Oscorp', score: 65, level: 'Nella media', canone: '€ 32k/anno' },
+        { rank: 5, name: 'Cyberdyne Systems', score: 45, level: 'Da migliorare', canone: '€ 15k/anno' }
+    ],
+    advisor: [
+        { title: 'Rischio Churn: Cyberdyne', desc: 'L\'utilizzo della piattaforma è sceso del 40% nell\'ultimo mese. Suggeriamo una chiamata di Customer Success per verificare l\'adozione.', type: 'Retention', action: 'Pianifica Review' },
+        { title: 'Upsell Opportunità Freader', desc: '14 clienti hanno superato l\'80% del limite crediti fascia 1. Propongo upgrade automatico alla Fascia 2 con sconto del 10%.', type: 'Pricing', action: 'Avvia Campagna Upsell' },
+        { title: 'Diversificazione Cliente', desc: 'Stark Industries rappresenta il 15% del fatturato totale. Considera di acquisire clienti mid-market per ridurre il rischio.', type: 'Risk Management', action: 'Visualizza Analisi Mercato' }
+    ],
+    anomalies: [
+        { alert: 'alta', title: 'Pagamento Scaduto (>60gg)', client: 'Oscorp', desc: 'Mancato pagamento fattura Q3 2025.' },
+        { alert: 'media', title: 'Violazione SLA', client: 'LexCorp', desc: 'Uptime inferiore al 99.9% nel mese scorso. Rimborso previsto.' }
+    ],
+    mapData: [
+        { city: 'Milano', cx: '35%', cy: '25%', count: 450 },
+        { city: 'Roma', cx: '50%', cy: '50%', count: 320 },
+        { city: 'Torino', cx: '25%', cy: '30%', count: 180 },
+        { city: 'Napoli', cx: '60%', cy: '65%', count: 150 },
+        { city: 'Bologna', cx: '45%', cy: '35%', count: 120 }
+    ]
+};
+
+// --- RENDERERS ---
+function renderOverview() {
+    const grid = $('#kpi-grid');
+    if(!grid) return;
+    grid.innerHTML = MOCK_DATA.overviewKpi.map(k => `
+        <div class="stat-card">
+            <div class="stat-icon stat-icon--${k.color}"><i class="${k.icon}"></i></div>
+            <div class="stat-info">
+                <span class="stat-value">${k.value}</span>
+                <span class="stat-label">${k.title} <span style="font-size:0.75rem; color:var(--accent); margin-left:8px;">${k.desc}</span></span>
+            </div>
+        </div>
+    `).join('');
+
+    const tableBody = $('#overview-table-body');
+    if(window._allContracts && window._allContracts.length > 0) {
+        tableBody.innerHTML = `
+        <table class="data-table">
+            <thead><tr><th>Cliente</th><th>Prodotto</th><th>Stato</th></tr></thead>
+            <tbody>
+                ${window._allContracts.slice(0, 5).map(c => `
+                <tr onclick="switchView('contracts'); loadContractDetail('${c.id}')">
+                    <td>${escapeHtml(c.cliente)}</td>
+                    <td><span class="badge ${c.prodotto === 'Freader' ? 'badge--purple' : 'badge--warning'}">${c.prodotto}</span></td>
+                    <td><span class="badge badge--success">${c.status}</span></td>
+                </tr>`).join('')}
+            </tbody>
+        </table>`;
+    } else {
+        tableBody.innerHTML = `<div class="empty-state"><p>Caricamento o nessun contratto...</p></div>`;
+    }
+
+    const expList = $('#expiring-list');
+    if(expList) {
+        expList.innerHTML = MOCK_DATA.expiring.map(e => `
+            <div class="anomaly-item hs-${e.days < 15 ? 'alta' : 'media'}" style="margin-bottom:0.5rem; cursor:pointer;" onclick="switchView('contracts')">
+                <div style="flex:1;">
+                    <div class="a-title">${e.client}</div>
+                    <div class="a-desc">Scade in ${e.days} giorni — ${e.prod}</div>
+                </div>
+                <div class="a-client">${e.value}</div>
+            </div>
+        `).join('');
+    }
+}
+
+function renderCosts(prod) {
+    const data = MOCK_DATA.costs[prod];
+    
+    $$('.seg-btn').forEach(b => b.classList.remove('active'));
+    $(`.seg-btn[data-prod="${prod}"]`).classList.add('active');
+
+    $('#costs-kpi-grid').innerHTML = data.kpi.map(k => `
+        <div class="stat-card">
+            <div class="stat-icon stat-icon--${k.color}"><i class="${k.icon}"></i></div>
+            <div class="stat-info">
+                <span class="stat-value">${k.value}</span>
+                <span class="stat-label">${k.title}</span>
+            </div>
+        </div>
+    `).join('');
+
+    $('#costi-fissi-table').innerHTML = `
+        <table class="data-table">
+            <thead><tr><th>Voce Costo</th><th>Tipologia</th><th>Importo</th></tr></thead>
+            <tbody>${data.fissi.map(f => `<tr><td>${f.voce}</td><td><span class="badge badge--info">${f.tipo}</span></td><td><strong>${f.importo}</strong></td></tr>`).join('')}</tbody>
+        </table>`;
+
+    $('#costi-variabili-table').innerHTML = `
+        <table class="data-table">
+            <thead><tr><th>Voce Costo</th><th>Tipologia</th><th>Costo Unitario</th></tr></thead>
+            <tbody>${data.variabili.map(v => `<tr><td>${v.voce}</td><td><span class="badge badge--purple">${v.tipo}</span></td><td><strong>${v.constMedio}</strong></td></tr>`).join('')}</tbody>
+        </table>`;
+}
+
+function renderContractsKpiAndAnomalies() {
+    $('#contracts-kpi-grid').innerHTML = `
+        <div class="stat-card">
+            <div class="stat-icon stat-icon--blue"><i class="ri-folder-shield-2-line"></i></div>
+            <div class="stat-info"><span class="stat-value">${window._allContracts ? window._allContracts.length : 0}</span><span class="stat-label">Contratti Totali</span></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon stat-icon--green"><i class="ri-checkbox-circle-line"></i></div>
+            <div class="stat-info"><span class="stat-value">${window._allContracts ? window._allContracts.filter(c=>c.status==='ACTIVE').length : 0}</span><span class="stat-label">Attivi</span></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon stat-icon--danger"><i class="ri-error-warning-line"></i></div>
+            <div class="stat-info"><span class="stat-value">${MOCK_DATA.anomalies.length}</span><span class="stat-label">Anomalie Rilevate</span></div>
+        </div>
+    `;
+
+    $('#anomalies-container').innerHTML = `
+        <div class="card" style="border-color:var(--color-danger); background: var(--color-danger-bg);">
+            <div class="card-header" style="border-bottom:none; padding-bottom:0;">
+                <h2 style="color:var(--color-danger);"><i class="ri-alarm-warning-fill"></i> Attenzione: ${MOCK_DATA.anomalies.length} anomalie riscontrate</h2>
+            </div>
+            <div class="card-body">
+                <div class="anomalies-list">
+                    ${MOCK_DATA.anomalies.map(a => `
+                        <div class="anomaly-item hs-${a.alert}">
+                            <i class="${a.alert === 'alta' ? 'ri-close-circle-line' : 'ri-error-warning-line'}" style="font-size:1.5rem; color:var(--color-danger);"></i>
+                            <div style="flex:1;">
+                                <div class="a-title">${a.title}</div>
+                                <div class="a-desc">${a.desc}</div>
+                            </div>
+                            <div class="a-client">${a.client}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        </div>
+    `;
+
+    if (!window._notified) {
+        checkAndNotify();
+        window._notified = true;
+    }
+}
+
+function renderMap() {
+    $('#map-container').innerHTML = `
+        <svg viewBox="0 0 100 100" style="width:100%; height:100%; opacity:0.3; position:absolute; z-index:0; pointer-events:none;">
+            <path d="M25,20 L40,25 L50,40 L65,55 L80,70 L75,80 L60,85 L50,75 L45,85 L35,70 L30,55 L25,45 Z" fill="none" stroke="var(--text-tertiary)" stroke-width="2" stroke-linejoin="round"/>
+        </svg>
+        <div style="position:relative; width:100%; height:300px; z-index:1;">
+            ${MOCK_DATA.mapData.map(d => `
+                <div class="map-dot" style="position:absolute; left:${d.cx}; top:${d.cy};" title="${d.city}: ${d.count} contratti">
+                    <i class="ri-map-pin-2-fill" style="color:var(--accent); font-size:1.5rem; filter:drop-shadow(0 0 10px var(--accent-glow));"></i>
+                    <div style="position:absolute; background:var(--bg-card); border:1px solid var(--border-color); padding:0.2rem 0.5rem; border-radius:4px; font-size:0.7rem; color:var(--text-primary); margin-top:4px; transform:translate(-25%, 0); pointer-events:none;">
+                        ${d.city} (${d.count})
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+function renderTopClients() {
+    $('#topclients-container').innerHTML = `
+        <table class="data-table">
+            <thead><tr><th>Rank</th><th>Cliente</th><th>Score</th><th>Valutazione</th><th>Canone Annuo</th></tr></thead>
+            <tbody>
+                ${MOCK_DATA.topClients.map(c => `
+                <tr>
+                    <td><div class="rank-number">#${c.rank}</div></td>
+                    <td><strong style="font-size:1.05rem; color:var(--text-primary);">${c.name}</strong></td>
+                    <td><span class="rank-score">${c.score}/100</span></td>
+                    <td><span class="badge ${c.score > 90 ? 'badge--success' : (c.score > 70 ? 'badge--info' : 'badge--warning')}">${c.level}</span></td>
+                    <td>${c.canone}</td>
+                </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+}
+
+function renderAdvisor() {
+    $('#advisor-container').innerHTML = MOCK_DATA.advisor.map(a => `
+        <div class="advisor-card">
+            <div class="adv-icon"><i class="ri-robot-2-fill"></i></div>
+            <div class="adv-content">
+                <div class="adv-title">${a.title} <span class="badge badge--purple">${a.type}</span></div>
+                <div class="adv-desc">${a.desc}</div>
+                <button class="adv-action">${a.action}</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function checkAndNotify() {
+    if ("Notification" in window) {
+        if (Notification.permission === 'granted') {
+            const critici = MOCK_DATA.anomalies.filter(a => a.alert === 'alta');
+            if (critici.length > 0) {
+                new Notification('ContractIQ Alert', { 
+                    body: `${critici.length} anomalie critiche rilevate nei contratti!`,
+                });
+            }
+        } else if (Notification.permission !== 'denied') {
+            Notification.requestPermission().then(permission => {
+                if (permission === 'granted') checkAndNotify();
+            });
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const segs = document.getElementById('costs-segment');
+    if (segs) {
+        segs.addEventListener('click', (e) => {
+            if(e.target.classList.contains('seg-btn')) {
+                renderCosts(e.target.dataset.prod);
+            }
+        });
+    }
+    
+    const btnRefOv = document.getElementById('btn-refresh-overview');
+    if (btnRefOv) {
+        btnRefOv.addEventListener('click', () => {
+            loadContracts().then(() => renderOverview());
+        });
+    }
+
+    // Set initial view after a small delay to allow health checks to run
+    setTimeout(() => {
+        loadContracts().then(() => {
+            switchView('overview');
+        });
+    }, 500);
+});

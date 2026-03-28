@@ -24,6 +24,10 @@ def upload_and_analyze():
     # 2. Salvataggio temporaneo
     filename = secure_filename(file.filename)
     filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+
+    if os.path.exists(filepath):
+        return jsonify({"status": "error", "message": f"Il file '{filename}' è già stato caricato in precedenza."}), 409
+
     file.save(filepath)
 
     try:
@@ -72,6 +76,11 @@ def upload_and_analyze_batch():
             
         filename = secure_filename(file.filename)
         filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+
+        if os.path.exists(filepath):
+            errors.append({"filename": filename, "error": f"File '{filename}' già caricato in precedenza."})
+            continue
+
         file.save(filepath)
 
         try:
@@ -113,9 +122,12 @@ def upload_file():
     if file.filename == '':
         return jsonify({"status": "error", "message": "Nome file vuoto"}), 400
 
-    # Salvataggio sicuro del file
     filename = secure_filename(file.filename)
     filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+
+    if os.path.exists(filepath):
+        return jsonify({"status": "error", "message": f"Il file '{filename}' è già stato caricato in precedenza."}), 409
+
     file.save(filepath)
 
     try:

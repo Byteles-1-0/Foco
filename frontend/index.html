@@ -41,7 +41,7 @@
 
                 <div class="welcome-upload-area">
                     <div class="welcome-dropzone" id="welcome-dropzone">
-                        <input type="file" id="welcome-file-input" accept=".pdf,.docx,.jpg,.jpeg,.png" hidden>
+                        <input type="file" id="welcome-file-input" accept=".pdf,.docx,.jpg,.jpeg,.png" multiple hidden>
                         <div class="welcome-dropzone-content">
                             <div class="welcome-dropzone-icon">
                                 <i class="ri-upload-cloud-2-line"></i>
@@ -297,10 +297,10 @@
                         <div class="card-header"><h2><i class="ri-upload-cloud-2-line"></i> Carica Documento</h2></div>
                         <div class="card-body">
                             <div class="dropzone" id="dropzone">
-                                <input type="file" id="file-input" accept=".pdf,.docx,.jpg,.jpeg,.png" hidden>
+                                <input type="file" id="file-input" accept=".pdf,.docx,.jpg,.jpeg,.png" multiple hidden>
                                 <div class="dropzone-content">
                                     <div class="dropzone-icon"><i class="ri-file-upload-line"></i></div>
-                                    <h3>Trascina qui il tuo contratto</h3>
+                                    <h3>Trascina qui i tuoi contratti</h3>
                                     <p>oppure <span class="dropzone-link">sfoglia i file</span></p>
                                     <div class="dropzone-formats">
                                         <span class="format-badge">PDF</span>
@@ -310,16 +310,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="file-preview" id="file-preview" style="display:none;">
-                                <div class="file-info">
-                                    <i class="ri-file-text-line"></i>
-                                    <div>
-                                        <span class="file-name" id="file-name"></span>
-                                        <span class="file-size" id="file-size"></span>
-                                    </div>
-                                </div>
-                                <button class="btn btn--danger btn--sm" id="btn-remove-file"><i class="ri-close-line"></i></button>
-                            </div>
+                            <div id="files-preview-list" style="display:none; flex-direction:column; gap:0.5rem; margin-bottom:1rem;"></div>
                             <button class="btn btn--primary btn--lg btn--full" id="btn-upload" disabled>
                                 <i class="ri-upload-2-line"></i> Carica ed Estrai Testo
                             </button>
@@ -346,17 +337,29 @@
                 </div>
 
                 <div class="step-content" id="step-3">
-                    <div class="card">
-                        <div class="card-header">
-                            <h2><i class="ri-robot-2-line"></i> Risultato Analisi AI</h2>
-                            <span class="badge badge--success" id="product-badge"></span>
-                        </div>
-                        <div class="card-body">
-                            <div class="analysis-grid" id="analysis-grid"></div>
-                            <div class="step-actions">
-                                <button class="btn btn--ghost" id="btn-back-to-text"><i class="ri-arrow-left-line"></i> Indietro</button>
-                                <button class="btn btn--success btn--lg" id="btn-save"><i class="ri-save-3-line"></i> Conferma e Salva</button>
+                    <!-- Single file analysis -->
+                    <div id="single-analysis-view">
+                        <div class="card">
+                            <div class="card-header">
+                                <h2><i class="ri-robot-2-line"></i> Risultato Analisi AI</h2>
+                                <span class="badge badge--success" id="product-badge"></span>
                             </div>
+                            <div class="card-body">
+                                <div class="analysis-grid" id="analysis-grid"></div>
+                                <div class="step-actions">
+                                    <button class="btn btn--ghost" id="btn-back-to-text"><i class="ri-arrow-left-line"></i> Indietro</button>
+                                    <button class="btn btn--success btn--lg" id="btn-save" onclick="saveContract()"><i class="ri-save-3-line"></i> Conferma e Salva</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Batch analysis -->
+                    <div id="batch-analysis-view" style="display:none;">
+                        <div id="batch-results-list" style="display:flex; flex-direction:column; gap:1rem;"></div>
+                        <div id="batch-errors" style="margin-top:1rem;"></div>
+                        <div class="step-actions" style="margin-top:1.5rem;">
+                            <button class="btn btn--ghost" onclick="resetUploadFlow()"><i class="ri-arrow-left-line"></i> Indietro</button>
+                            <button class="btn btn--success btn--lg" onclick="saveAllContracts()"><i class="ri-save-3-line"></i> Conferma e Salva Tutti</button>
                         </div>
                     </div>
                 </div>
@@ -365,12 +368,12 @@
                     <div class="card">
                         <div class="card-body" style="text-align: center; padding: 4rem 2rem;">
                             <div class="success-animation"><i class="ri-checkbox-circle-line"></i></div>
-                            <h2 style="margin-top: 1.5rem; color: var(--color-success);">Contratto Salvato!</h2>
-                            <p style="color: var(--text-secondary); margin-top: 0.5rem;">Il contratto è stato registrato con successo nel database.</p>
-                            <p style="color: var(--text-tertiary); margin-top: 0.25rem; font-size: 0.85rem;">ID: <code id="saved-contract-id"></code></p>
+                            <h2 style="margin-top: 1.5rem; color: var(--color-success);" id="save-success-title">Contratto Salvato!</h2>
+                            <p style="color: var(--text-secondary); margin-top: 0.5rem;" id="save-success-desc">Il contratto è stato registrato con successo nel database.</p>
+                            <p style="color: var(--text-tertiary); margin-top: 0.25rem; font-size: 0.85rem;" id="save-success-ids">ID: <code id="saved-contract-id"></code></p>
                             <div class="step-actions" style="justify-content: center; margin-top: 2rem;">
                                 <button class="btn btn--ghost" onclick="switchView('contracts')"><i class="ri-file-list-3-line"></i> Vai ai Contratti</button>
-                                <button class="btn btn--primary" id="btn-new-upload"><i class="ri-add-line"></i> Carica un altro</button>
+                                <button class="btn btn--primary" onclick="resetUploadFlow()"><i class="ri-add-line"></i> Carica un altro</button>
                             </div>
                         </div>
                     </div>

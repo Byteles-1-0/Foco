@@ -54,8 +54,7 @@ def save_contract_to_db(tenant_id, extracted_data, created_by="AI_Extraction_Sys
                 credito_uptime=parse_float(sla.get('credito_uptime'), 0.0),
                 credito_ticketing=parse_float(sla.get('credito_ticketing'), 0.0),
                 tetto_crediti=parse_float(sla.get('tetto_crediti'), 0.0),
-                created_by=created_by,
-                change_reason="Importazione automatica AI verificata da utente"
+                created_by=created_by
             )
             db.session.add(version)
             
@@ -87,8 +86,7 @@ def save_contract_to_db(tenant_id, extracted_data, created_by="AI_Extraction_Sys
                 credito_uptime=parse_float(sla.get('credito_uptime'), 0.0),
                 credito_ticketing=parse_float(sla.get('credito_ticketing'), 0.0),
                 tetto_crediti=parse_float(sla.get('tetto_crediti'), 0.0),
-                created_by=created_by,
-                change_reason="Importazione automatica AI verificata da utente"
+                created_by=created_by
             )
             db.session.add(version)
             

@@ -14,6 +14,7 @@ from dotenv import load_dotenv
 from extensions import db
 from models import Tenant
 from api.contracts_routes import contracts_bp
+from api.dashboard_routes import dashboard_bp
 
 load_dotenv()
 
@@ -64,6 +65,7 @@ def require_tenant_id():
 
 # Registrazione delle rotte API
 app.register_blueprint(contracts_bp, url_prefix='/api/v1/contracts')
+app.register_blueprint(dashboard_bp, url_prefix='/api')
 
 @app.route('/health', methods=['GET'])
 def health_check():

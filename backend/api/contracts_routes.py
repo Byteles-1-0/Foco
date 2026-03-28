@@ -52,6 +52,56 @@ def upload_and_analyze():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 # ==========================================
+# 0. BATCH UPLOAD AND ANALYZE (POST)
+# ==========================================
+@contracts_bp.route('/upload-and-analyze-batch', methods=['POST'])
+def upload_and_analyze_batch():
+    if 'files' not in request.files:
+        return jsonify({"status": "error", "message": "Nessun file fornito (chiave 'files' mancante)"}), 400
+        
+    files = request.files.getlist('files')
+    if not files or all(file.filename == '' for file in files):
+        return jsonify({"status": "error", "message": "Nessun file valido trovato"}), 400
+
+    results = []
+    errors = []
+
+    for file in files:
+        if file.filename == '':
+            continue
+            
+        filename = secure_filename(file.filename)
+        filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+        file.save(filepath)
+
+        try:
+            print(f"📄 Estrazione testo da {filename}...")
+            text = parse_document(filepath)
+            
+            if not text or len(text.strip()) < 10:
+                print(f"⚠️ Testo non sufficiente per {filename}")
+                errors.append({"filename": filename, "error": "Impossibile estrarre testo o testo troppo breve"})
+                continue
+
+            print(f"🧠 Analisi IA in corso per {filename}...")
+            analysis_result = analyze_contract_text(text)
+            
+            results.append({
+                "filename": filename,
+                "analysis": analysis_result
+            })
+            
+        except Exception as e:
+            print(f"❌ Errore durante l'elaborazione di {filename}: {str(e)}")
+            errors.append({"filename": filename, "error": str(e)})
+
+    return jsonify({
+        "status": "success",
+        "data": results,
+        "errors": errors
+    }), 200
+
+# ==========================================
 # 1. UPLOAD (POST)
 # ==========================================
 @contracts_bp.route('/upload', methods=['POST'])

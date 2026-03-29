@@ -14,6 +14,8 @@ import { escapeHtml } from '../../utils/helpers';
 const ContractsView = ({ contracts, onRefresh, onContractClick }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [anomalies, setAnomalies] = useState([]);
+  const [anomalyPage, setAnomalyPage] = useState(0);
+  const ANOMALIES_PER_PAGE = 4;
 
   useEffect(() => {
     loadAnomalies();
@@ -68,10 +70,35 @@ const ContractsView = ({ contracts, onRefresh, onContractClick }) => {
               <h2 style={{ color: 'var(--color-danger)' }}>
                 <i className="ri-alarm-warning-fill"></i> {anomalies.length} anomalie
               </h2>
+              {anomalies.length > ANOMALIES_PER_PAGE && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span style={{ fontSize: '0.78rem', color: 'var(--text-tertiary)' }}>
+                    {anomalyPage * ANOMALIES_PER_PAGE + 1}-{Math.min((anomalyPage + 1) * ANOMALIES_PER_PAGE, anomalies.length)} di {anomalies.length}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    disabled={anomalyPage === 0}
+                    onClick={() => setAnomalyPage(p => p - 1)}
+                  >
+                    <i className="ri-arrow-left-s-line"></i>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    disabled={(anomalyPage + 1) * ANOMALIES_PER_PAGE >= anomalies.length}
+                    onClick={() => setAnomalyPage(p => p + 1)}
+                  >
+                    <i className="ri-arrow-right-s-line"></i>
+                  </Button>
+                </div>
+              )}
             </Card.Header>
             <Card.Body>
               <div className="anomalies-list">
-                {anomalies.map((a, idx) => (
+                {anomalies
+                  .slice(anomalyPage * ANOMALIES_PER_PAGE, (anomalyPage + 1) * ANOMALIES_PER_PAGE)
+                  .map((a, idx) => (
                   <div key={idx} className={`anomaly-item hs-${a.gravita}`}>
                     <i
                       className={a.gravita === 'alta' ? 'ri-close-circle-line' : 'ri-error-warning-line'}
@@ -87,6 +114,24 @@ const ContractsView = ({ contracts, onRefresh, onContractClick }) => {
                   </div>
                 ))}
               </div>
+              {anomalies.length > ANOMALIES_PER_PAGE && (
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '4px', marginTop: '0.75rem' }}>
+                  {Array.from({ length: Math.ceil(anomalies.length / ANOMALIES_PER_PAGE) }).map((_, i) => (
+                    <div
+                      key={i}
+                      onClick={() => setAnomalyPage(i)}
+                      style={{
+                        width: i === anomalyPage ? '20px' : '8px',
+                        height: '8px',
+                        borderRadius: '4px',
+                        background: i === anomalyPage ? 'var(--color-danger)' : 'var(--border-color)',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s'
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
             </Card.Body>
           </Card>
         </div>

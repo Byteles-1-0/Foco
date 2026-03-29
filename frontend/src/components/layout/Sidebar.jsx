@@ -5,9 +5,9 @@ const Sidebar = ({ activeView, onViewChange, tenantName, isOpen, onToggle }) => 
   const navItems = [
     { id: 'overview', icon: 'ri-dashboard-3-line', label: 'Overview' },
     { id: 'upload', icon: 'ri-sparkling-2-line', label: 'Analisi Contratto' },
+    { id: 'repricing', icon: 'ri-price-tag-3-line', label: 'Re-Pricing' },
     { id: 'contracts', icon: 'ri-folder-shield-2-line', label: 'Contratti' },
     { id: 'advisor', icon: 'ri-brain-line', label: 'AI Advisor' },
-    { id: 'repricing', icon: 'ri-price-tag-3-line', label: 'Re-Pricing' },
     { id: 'topclients', icon: 'ri-vip-crown-2-line', label: 'Top Clients' },
   ];
 

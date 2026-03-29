@@ -1,5 +1,6 @@
-from flask import Blueprint, request, jsonify, current_app, send_from_directory
+from flask import Blueprint, request, jsonify, current_app, send_from_directory, send_file
 from werkzeug.utils import secure_filename
+from datetime import datetime
 import os
 
 from extensions import db
@@ -21,12 +22,8 @@ def upload_and_analyze():
     if file.filename == '':
         return jsonify({"status": "error", "message": "Nome file vuoto"}), 400
 
-    # 2. Salvataggio temporaneo
     filename = secure_filename(file.filename)
     filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
-
-    if os.path.exists(filepath):
-        return jsonify({"status": "error", "message": f"Il file '{filename}' è già stato caricato in precedenza."}), 409
 
     file.save(filepath)
 
@@ -77,10 +74,6 @@ def upload_and_analyze_batch():
         filename = secure_filename(file.filename)
         filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
 
-        if os.path.exists(filepath):
-            errors.append({"filename": filename, "error": f"File '{filename}' già caricato in precedenza."})
-            continue
-
         file.save(filepath)
 
         try:
@@ -124,9 +117,6 @@ def upload_file():
 
     filename = secure_filename(file.filename)
     filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
-
-    if os.path.exists(filepath):
-        return jsonify({"status": "error", "message": f"Il file '{filename}' è già stato caricato in precedenza."}), 409
 
     file.save(filepath)
 
@@ -460,3 +450,212 @@ def pre_sign_analysis():
     except Exception as e:
         print(f"❌ Errore analisi pre-firma: {str(e)}")
         return jsonify({"status": "error", "message": str(e)}), 500
+
+
+# ==========================================
+# 9. RISK ANALYSIS (POST)
+# ==========================================
+@contracts_bp.route('/risk-analysis', methods=['POST'])
+def risk_analysis():
+    """Analizza rischio contratto: risk score, punti critici, errori ortografici."""
+    from service.ai_service import analyze_contract_risk
+    
+    data = request.get_json()
+    contract_data = data.get('contract_data')
+    testo_originale = data.get('testo_originale', '')
+    
+    if not contract_data:
+        return jsonify({"status": "error", "message": "Dati contratto mancanti"}), 400
+    
+    try:
+        result = analyze_contract_risk(contract_data, testo_originale)
+        return jsonify({"status": "success", "data": result}), 200
+    except Exception as e:
+        print(f"❌ Errore risk analysis: {str(e)}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+# ==========================================
+# 10. IMPROVE CLAUSE (POST)
+# ==========================================
+@contracts_bp.route('/improve-clause', methods=['POST'])
+def improve_clause():
+    """AI riscrive una clausola critica con termini migliori."""
+    from service.ai_service import improve_contract_clause
+    
+    data = request.get_json()
+    clausola_originale = data.get('clausola_originale', '')
+    tipo_problema = data.get('tipo_problema', '')
+    contesto = data.get('contesto_contratto', '')
+    valore_rif = data.get('valore_riferimento', '')
+    
+    if not clausola_originale:
+        return jsonify({"status": "error", "message": "Clausola originale mancante"}), 400
+    
+    try:
+        result = improve_contract_clause(clausola_originale, tipo_problema, contesto, valore_rif)
+        return jsonify({"status": "success", "data": result}), 200
+    except Exception as e:
+        print(f"❌ Errore improve clause: {str(e)}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+# ==========================================
+# 11. RECALCULATE RISK (POST)
+# ==========================================
+@contracts_bp.route('/recalculate-risk', methods=['POST'])
+def recalculate_risk():
+    """Ricalcola risk score con le modifiche applicate."""
+    from service.ai_service import analyze_contract_risk
+    
+    data = request.get_json()
+    contract_data = data.get('contract_data')
+    
+    if not contract_data:
+        return jsonify({"status": "error", "message": "Dati contratto mancanti"}), 400
+    
+    try:
+        result = analyze_contract_risk(contract_data, '')
+        return jsonify({"status": "success", "data": result}), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+# ==========================================
+# 12. DOWNLOAD MODIFIED CONTRACT DOCX (POST)
+# ==========================================
+@contracts_bp.route('/download-modified-pdf', methods=['POST'])
+def download_modified_docx():
+    """Apre il DOCX originale caricato, aggiunge in fondo le sezioni modificate."""
+    from io import BytesIO
+    from flask import send_file
+    from docx import Document
+    from docx.shared import Pt, RGBColor, Cm
+    from docx.enum.text import WD_ALIGN_PARAGRAPH
+    
+    data = request.get_json()
+    contract_data = data.get('contract_data', {})
+    original_risk = data.get('original_risk', {})
+    modifications = data.get('modifications', {})
+    new_risk_score = data.get('new_risk_score', 0)
+    filename = data.get('filename', '')
+    
+    ana = contract_data.get('anagrafica', {})
+    punti = original_risk.get('punti_critici', [])
+    orig_score = original_risk.get('risk_score', 0)
+    modified_ids = set(modifications.keys()) if modifications else set()
+    
+    # Try to open the original uploaded file
+    original_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename) if filename else None
+    
+    if original_path and os.path.exists(original_path) and original_path.endswith('.docx'):
+        doc = Document(original_path)
+    else:
+        # Fallback: create new doc with contract data
+        doc = Document()
+        for section in doc.sections:
+            section.top_margin = Cm(2)
+            section.bottom_margin = Cm(2)
+            section.left_margin = Cm(2.5)
+            section.right_margin = Cm(2.5)
+        
+        prodotto = contract_data.get('prodotto', 'N/A')
+        det = contract_data.get('dettagli_contratto', {})
+        sla = contract_data.get('sla', {})
+        
+        doc.add_heading(f'Contratto — {ana.get("cliente_ragione_sociale", "N/A")}', level=0)
+        p = doc.add_paragraph()
+        r = p.add_run(f'Prodotto: {prodotto} | Data: {det.get("data_firma", "N/A")}')
+        r.font.size = Pt(10)
+        
+        doc.add_heading('Anagrafica', level=2)
+        doc.add_paragraph(f'Ragione Sociale: {ana.get("cliente_ragione_sociale", "N/A")}')
+        doc.add_paragraph(f'Sede Legale: {ana.get("cliente_sede_legale", "N/A")}')
+        
+        doc.add_heading('Dettagli Contratto', level=2)
+        doc.add_paragraph(f'Data Firma: {det.get("data_firma", "N/A")}')
+        doc.add_paragraph(f'Durata: {det.get("durata_mesi", "N/A")} mesi')
+        doc.add_paragraph(f'Preavviso: {det.get("preavviso_giorni", "N/A")} giorni')
+        
+        doc.add_heading('SLA', level=2)
+        doc.add_paragraph(f'Credito Uptime: {sla.get("credito_uptime", "N/A")}%')
+        doc.add_paragraph(f'Credito Ticketing: {sla.get("credito_ticketing", "N/A")}%')
+        doc.add_paragraph(f'Tetto Crediti: {sla.get("tetto_crediti", "N/A")}%')
+    
+    # ── APPEND: Modifications section at the end ──
+    if modified_ids:
+        doc.add_page_break()
+        
+        h = doc.add_heading('ALLEGATO — Modifiche Proposte da Nexus Core AI', level=1)
+        for run in h.runs:
+            run.font.color.rgb = RGBColor(0x4F, 0x46, 0xE5)
+        
+        # Risk score table
+        p_score = doc.add_paragraph()
+        r = p_score.add_run(f'Risk Score: {orig_score}% → {new_risk_score}% (delta {new_risk_score - orig_score:+d}%)')
+        r.bold = True
+        r.font.size = Pt(11)
+        r.font.color.rgb = RGBColor(0x05, 0x96, 0x69) if new_risk_score < orig_score else RGBColor(0xDC, 0x26, 0x26)
+        
+        doc.add_paragraph()
+        
+        for p_item in punti:
+            if p_item.get('id') not in modified_ids:
+                continue
+            mod = modifications[p_item['id']]
+            
+            # Section heading
+            h2 = doc.add_heading(p_item.get('sezione', ''), level=2)
+            for run in h2.runs:
+                run.font.color.rgb = RGBColor(0x1E, 0x29, 0x3B)
+            
+            # Severity
+            p_sev = doc.add_paragraph()
+            r_sev = p_sev.add_run(f'Gravità: {p_item.get("gravita", "").upper()}')
+            r_sev.font.size = Pt(9)
+            r_sev.font.color.rgb = RGBColor(0xDC, 0x26, 0x26) if p_item.get('gravita') == 'alta' else RGBColor(0xD9, 0x77, 0x06)
+            
+            # Original text (strikethrough)
+            p_orig = doc.add_paragraph()
+            r_label = p_orig.add_run('ORIGINALE: ')
+            r_label.bold = True
+            r_label.font.size = Pt(9)
+            r_label.font.color.rgb = RGBColor(0x94, 0xA3, 0xB8)
+            r_text = p_orig.add_run(p_item.get('testo_contratto_originale', ''))
+            r_text.font.size = Pt(10)
+            r_text.font.color.rgb = RGBColor(0x94, 0xA3, 0xB8)
+            r_text.font.strike = True
+            
+            # New text (green, bold)
+            p_new = doc.add_paragraph()
+            r_label2 = p_new.add_run('NUOVO: ')
+            r_label2.bold = True
+            r_label2.font.size = Pt(9)
+            r_label2.font.color.rgb = RGBColor(0x05, 0x96, 0x69)
+            r_new = p_new.add_run(mod.get('testo_migliorato', ''))
+            r_new.font.size = Pt(10)
+            r_new.font.color.rgb = RGBColor(0x05, 0x96, 0x69)
+            r_new.bold = True
+            
+            if mod.get('motivazione'):
+                p_mot = doc.add_paragraph()
+                r_mot = p_mot.add_run(f'Motivazione: {mod["motivazione"]}')
+                r_mot.font.size = Pt(8)
+                r_mot.font.italic = True
+                r_mot.font.color.rgb = RGBColor(0x94, 0xA3, 0xB8)
+            
+            doc.add_paragraph()
+    
+    # Footer
+    footer = doc.add_paragraph()
+    footer.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    r_f = footer.add_run(f'Generato da Nexus Core Contract Intelligence — {datetime.now().strftime("%d/%m/%Y %H:%M")}')
+    r_f.font.size = Pt(8)
+    r_f.font.color.rgb = RGBColor(0x94, 0xA3, 0xB8)
+    
+    buf = BytesIO()
+    doc.save(buf)
+    buf.seek(0)
+    
+    out_name = f'contratto_{ana.get("cliente_ragione_sociale", "contratto").replace(" ", "_")}.docx'
+    return send_file(buf, mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document', as_attachment=True, download_name=out_name)

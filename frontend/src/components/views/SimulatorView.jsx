@@ -176,8 +176,8 @@ const SimulatorView = () => {
           {/* Hero Insight */}
           <Card style={{ 
             marginBottom: '1.5rem',
-            background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.05))',
-            borderColor: 'rgba(99, 102, 241, 0.3)'
+            background: 'linear-gradient(135deg, rgba(45, 92, 242, 0.1), rgba(74, 117, 255, 0.05))',
+            borderColor: 'rgba(45, 92, 242, 0.3)'
           }}>
             <Card.Body>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>

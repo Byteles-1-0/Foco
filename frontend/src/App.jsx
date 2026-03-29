@@ -24,6 +24,7 @@ import TopClientsView from './components/views/TopClientsView';
 import AdvisorView from './components/views/AdvisorView';
 import ContractDetailView from './components/views/ContractDetailView';
 import SimulatorView from './components/views/SimulatorView';
+import RepricingView from './components/views/RepricingView';
 
 function App() {
   // State
@@ -112,13 +113,11 @@ function App() {
 
   const viewTitles = {
     overview: 'Overview',
-    costs: 'Reparto Costi',
-    upload: 'Carica Contratto',
+    upload: 'Analisi Contratto',
     contracts: 'Contratti',
-    radar: 'Risk Radar',
     topclients: 'Top Clients',
     advisor: 'AI Advisor',
-    simulator: 'Simulatore Scenari',
+    repricing: 'Re-Pricing',
     detail: 'Dettaglio Contratto'
   };
 
@@ -143,7 +142,7 @@ function App() {
 
           <main className="main-content">
             <Topbar
-              title={viewTitles[currentView] || 'FOCO'}
+              title={viewTitles[currentView] || 'Nexus Core'}
               apiStatus={apiStatus}
               onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
             />
@@ -186,6 +185,8 @@ function App() {
             {currentView === 'advisor' && <AdvisorView />}
 
             {currentView === 'simulator' && <SimulatorView />}
+
+            {currentView === 'repricing' && <RepricingView />}
 
             {currentView === 'detail' && (
               <ContractDetailView

@@ -1087,3 +1087,200 @@ def simulate_scenario():
     
     else:
         return jsonify({"status": "error", "message": "Tipo scenario non supportato"}), 400
+
+
+# ==========================================
+# 11. RE-PRICING
+# ==========================================
+@dashboard_bp.route('/repricing', methods=['GET'])
+def get_repricing():
+    """Contratti in scadenza entro 20 giorni con proposte di re-pricing."""
+    from datetime import datetime, timedelta
+    from models import FreaderContract, FreaderContractVersion, CutAIContract, CutAIContractVersion
+    
+    today = datetime.now()
+    results = []
+    
+    # Collect all contracts with versions
+    all_contracts_data = []
+    
+    freader_contracts = FreaderContract.query.filter_by(status='ACTIVE').all()
+    for c in freader_contracts:
+        if not c.versions:
+            continue
+        latest = c.versions[0]
+        try:
+            data_firma = datetime.strptime(latest.data_firma, '%d/%m/%Y')
+            scadenza = data_firma + timedelta(days=latest.durata_mesi * 30)
+            giorni_scadenza = (scadenza - today).days
+            all_contracts_data.append({
+                'id': c.id, 'cliente': c.cliente_ragione_sociale, 'prodotto': 'Freader',
+                'canone_trim': latest.canone_trimestrale, 'durata_mesi': latest.durata_mesi,
+                'preavviso_gg': latest.preavviso_giorni, 'tetto_cred': latest.tetto_crediti,
+                'credito_uptime': latest.credito_uptime, 'credito_ticketing': latest.credito_ticketing,
+                'giorni_scadenza': giorni_scadenza,
+                'scadenza': scadenza.strftime('%d/%m/%Y')
+            })
+        except ValueError:
+            pass
+    
+    cutai_contracts = CutAIContract.query.filter_by(status='ACTIVE').all()
+    for c in cutai_contracts:
+        if not c.versions:
+            continue
+        latest = c.versions[0]
+        try:
+            data_firma = datetime.strptime(latest.data_sottoscrizione, '%d/%m/%Y')
+            scadenza = data_firma + timedelta(days=latest.durata_mesi * 30)
+            giorni_scadenza = (scadenza - today).days
+            all_contracts_data.append({
+                'id': c.id, 'cliente': c.cliente_ragione_sociale, 'prodotto': 'CutAI',
+                'canone_trim': latest.canone_base_trimestrale, 'durata_mesi': latest.durata_mesi,
+                'preavviso_gg': latest.preavviso_giorni, 'tetto_cred': latest.tetto_crediti,
+                'credito_uptime': latest.credito_uptime, 'credito_ticketing': latest.credito_ticketing,
+                'giorni_scadenza': giorni_scadenza,
+                'scadenza': scadenza.strftime('%d/%m/%Y')
+            })
+        except ValueError:
+            pass
+    
+    # Calculate portfolio averages
+    if all_contracts_data:
+        avg_canone = sum(c['canone_trim'] for c in all_contracts_data) / len(all_contracts_data)
+    else:
+        avg_canone = 5000
+    
+    # Filter contracts expiring within 20 days
+    expiring = [c for c in all_contracts_data if 0 < c['giorni_scadenza'] <= 20]
+    expiring.sort(key=lambda x: x['giorni_scadenza'])
+    
+    for c in expiring:
+        # ── Confidence index (0-100) based on contract-specific data ──
+        # Each factor contributes independently based on actual values
+        
+        # Tetto crediti (weight 25): lower = more open client
+        tetto_score = max(0, 25 - c['tetto_cred'] * 1.8)  # 10%→7, 5%→16, 15%→-2→0, 20%→-11→0
+        
+        # Credito uptime (weight 20): lower = more open
+        uptime_score = max(0, 20 - c['credito_uptime'] * 2.5)  # 5%→7.5, 8%→0, 10%→-5→0
+        
+        # Credito ticketing (weight 15): lower = more open
+        ticket_score = max(0, 15 - c['credito_ticketing'] * 2.0)  # 5%→5, 6%→3, 8%→-1→0
+        
+        # Preavviso (weight 20): longer = more stable client
+        if c['preavviso_gg'] >= 90:
+            preav_score = 20
+        elif c['preavviso_gg'] >= 60:
+            preav_score = 15
+        elif c['preavviso_gg'] >= 30:
+            preav_score = 8
+        else:
+            preav_score = 2
+        
+        # Durata (weight 20): longer = more committed
+        if c['durata_mesi'] >= 36:
+            durata_score = 20
+        elif c['durata_mesi'] >= 24:
+            durata_score = 14
+        elif c['durata_mesi'] >= 12:
+            durata_score = 8
+        else:
+            durata_score = 3
+        
+        confidence = min(100, max(0, round(tetto_score + uptime_score + ticket_score + preav_score + durata_score)))
+        
+        if confidence >= 65:
+            label = 'alta'
+        elif confidence >= 35:
+            label = 'media'
+        else:
+            label = 'bassa'
+        
+        # ── Dynamic pricing percentages based on confidence + contract specifics ──
+        canone = c['canone_trim']
+        
+        # Gap from portfolio average influences pricing aggressiveness
+        gap_from_avg = (avg_canone - canone) / avg_canone if avg_canone > 0 else 0  # positive = under-priced
+        gap_bonus = max(0, min(5, gap_from_avg * 15))  # 0-5% extra if under-priced
+        
+        # Urgency factor: fewer days = slightly less aggressive (less negotiation time)
+        urgency_factor = 1.0 if c['giorni_scadenza'] >= 15 else 0.85
+        
+        # Calculate per-contract percentages
+        if confidence >= 65:
+            base_cons = 4 + gap_bonus * 0.3
+            base_rec = 10 + gap_bonus * 0.8
+            base_agg = 18 + gap_bonus
+            prob_cons = min(95, 88 + confidence * 0.05)
+            prob_rec = min(85, 68 + confidence * 0.1)
+            prob_agg = min(65, 40 + confidence * 0.15)
+        elif confidence >= 35:
+            base_cons = 2 + gap_bonus * 0.2
+            base_rec = 5 + gap_bonus * 0.5
+            base_agg = 10 + gap_bonus * 0.7
+            prob_cons = min(92, 82 + confidence * 0.08)
+            prob_rec = min(75, 55 + confidence * 0.12)
+            prob_agg = min(50, 28 + confidence * 0.15)
+        else:
+            base_cons = 1 + gap_bonus * 0.1
+            base_rec = 2.5 + gap_bonus * 0.3
+            base_agg = 5 + gap_bonus * 0.4
+            prob_cons = min(96, 90 + confidence * 0.05)
+            prob_rec = min(82, 72 + confidence * 0.1)
+            prob_agg = min(60, 48 + confidence * 0.12)
+        
+        pcts = [
+            round(base_cons * urgency_factor, 1),
+            round(base_rec * urgency_factor, 1),
+            round(base_agg * urgency_factor, 1)
+        ]
+        probs = [round(prob_cons), round(prob_rec), round(prob_agg)]
+        
+        proposte = []
+        for fascia, pct, prob in zip(['conservativa', 'raccomandata', 'aggressiva'], pcts, probs):
+            nuovo = round(canone * (1 + pct / 100), 2)
+            proposte.append({
+                'fascia': fascia,
+                'percentuale': pct,
+                'nuovo_canone': nuovo,
+                'delta_revenue_annuo': round((nuovo - canone) * 4, 2),
+                'probabilita_accettazione': prob
+            })
+        
+        motivazioni = []
+        if canone < avg_canone * 0.9:
+            motivazioni.append(f"Canone sotto media portafoglio (€{avg_canone:,.0f}/trim)")
+        if canone >= avg_canone * 1.1:
+            motivazioni.append("Canone già sopra media — repricing moderato")
+        motivazioni.append("Costi infrastruttura in aumento YoY")
+        if c['tetto_cred'] <= 10:
+            motivazioni.append(f"Basso tetto crediti ({c['tetto_cred']}%) — cliente aperto")
+        elif c['tetto_cred'] > 12:
+            motivazioni.append(f"Alto tetto crediti ({c['tetto_cred']}%) — cautela")
+        if c['preavviso_gg'] >= 60:
+            motivazioni.append(f"Preavviso lungo ({c['preavviso_gg']}gg) — cliente stabile")
+        if c['credito_uptime'] > 7:
+            motivazioni.append(f"Credito uptime elevato ({c['credito_uptime']}%) — clausola restrittiva")
+        
+        results.append({
+            'contract_id': c['id'],
+            'cliente': c['cliente'],
+            'prodotto': c['prodotto'],
+            'canone_attuale': canone,
+            'giorni_scadenza': c['giorni_scadenza'],
+            'scadenza': c['scadenza'],
+            'indice_confidenza': confidence,
+            'confidenza_label': label,
+            'fattori_confidenza': {
+                'tetto_crediti': {'valore': c['tetto_cred'], 'score': round(tetto_score / 25 * 100)},
+                'credito_uptime': {'valore': c['credito_uptime'], 'score': round(uptime_score / 20 * 100)},
+                'credito_ticketing': {'valore': c['credito_ticketing'], 'score': round(ticket_score / 15 * 100)},
+                'preavviso': {'valore': c['preavviso_gg'], 'score': round(preav_score / 20 * 100)},
+                'durata': {'valore': c['durata_mesi'], 'score': round(durata_score / 20 * 100)}
+            },
+            'proposte': proposte,
+            'motivazioni': motivazioni,
+            'revenue_a_rischio': round(canone * 4, 2)
+        })
+    
+    return jsonify({"status": "success", "data": results}), 200

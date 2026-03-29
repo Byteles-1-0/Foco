@@ -1,27 +1,27 @@
 /* ============================================
-   FOCO — Contract Intelligence
+   Nexus Core — Contract Intelligence
    Design System & Global Styles
    ============================================ */
 
 :root {
-    /* Colors */
-    --bg-primary: #0a0e1a;
-    --bg-secondary: #111827;
-    --bg-card: #1a1f35;
-    --bg-card-hover: #1f2544;
-    --bg-input: #141929;
-    --bg-overlay: rgba(0, 0, 0, 0.6);
+    /* Colors — Nexus Core Palette */
+    --bg-primary: #FFFFFF;
+    --bg-secondary: #F1F5F9;
+    --bg-card: #ffffff;
+    --bg-card-hover: #e6e7ed;
+    --bg-input: #111729;
+    --bg-overlay: rgba(0, 0, 0, 0.4);
 
-    --border-color: rgba(255, 255, 255, 0.06);
-    --border-color-hover: rgba(255, 255, 255, 0.12);
+    --border-color: rgba(162, 216, 14, 0.1);
+    --border-color-hover: rgba(17, 23, 41, 0.2);
 
-    --text-primary: #f1f5f9;
-    --text-secondary: #94a3b8;
-    --text-tertiary: #64748b;
+    --text-primary: #111729;
+    --text-secondary: #4a5568;
+    --text-tertiary: #6b7a90;
 
-    --accent: #6366f1;
-    --accent-hover: #818cf8;
-    --accent-glow: rgba(99, 102, 241, 0.25);
+    --accent: #2D5CF2;
+    --accent-hover: #4A75FF;
+    --accent-glow: rgba(45, 92, 242, 0.3);
 
     --color-success: #22c55e;
     --color-success-bg: rgba(34, 197, 94, 0.12);
@@ -29,12 +29,12 @@
     --color-warning-bg: rgba(245, 158, 11, 0.12);
     --color-danger: #ef4444;
     --color-danger-bg: rgba(239, 68, 68, 0.12);
-    --color-info: #3b82f6;
-    --color-info-bg: rgba(59, 130, 246, 0.12);
+    --color-info: #2D5CF2;
+    --color-info-bg: rgba(45, 92, 242, 0.12);
 
-    --gradient-primary: linear-gradient(135deg, #6366f1, #8b5cf6);
+    --gradient-primary: linear-gradient(135deg, #2D5CF2, #4A75FF);
     --gradient-success: linear-gradient(135deg, #22c55e, #10b981);
-    --gradient-card: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(139, 92, 246, 0.04));
+    --gradient-card: linear-gradient(135deg, rgba(45, 92, 242, 0.08), rgba(74, 117, 255, 0.04));
 
     /* Spacing */
     --sidebar-width: 260px;
@@ -215,7 +215,7 @@ ul { list-style: none; }
     align-items: center;
     justify-content: space-between;
     border-bottom: 1px solid var(--border-color);
-    background: rgba(17, 24, 39, 0.8);
+    background: #FFFFFF;
     backdrop-filter: blur(12px);
     position: sticky;
     top: 0;
@@ -492,6 +492,7 @@ ul { list-style: none; }
     justify-content: center;
     gap: 0;
     padding: 1.5rem 0 2rem;
+    width: 100%;
 }
 
 .step {
@@ -534,7 +535,8 @@ ul { list-style: none; }
 }
 
 .step-connector {
-    width: 60px;
+    flex: 1;
+    min-width: 30px;
     height: 2px;
     background: var(--border-color);
     margin: 0 0.5rem;

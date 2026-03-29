@@ -11,7 +11,9 @@ const AnalysisStep = ({
   onBack, 
   onSave, 
   onSaveAll,
-  onPreSignAnalysis
+  onPreSignAnalysis,
+  saveLabel = "Conferma e Salva",
+  saveIcon = "ri-save-3-line"
 }) => {
   const buildSection = (title, icon, fields) => {
     return (
@@ -47,8 +49,8 @@ const AnalysisStep = ({
           </Card.Header>
           <Card.Body>
             <div style={{ 
-              background: 'rgba(99, 102, 241, 0.08)', 
-              border: '1px solid rgba(99, 102, 241, 0.2)',
+              background: 'rgba(45, 92, 242, 0.08)', 
+              border: '1px solid rgba(45, 92, 242, 0.2)',
               borderRadius: 'var(--radius-md)',
               padding: '1rem',
               marginBottom: '1.5rem',
@@ -104,13 +106,8 @@ const AnalysisStep = ({
               <Button variant="ghost" onClick={onBack}>
                 <i className="ri-arrow-left-line"></i> Indietro
               </Button>
-              {onPreSignAnalysis && (
-                <Button variant="primary" onClick={onPreSignAnalysis}>
-                  <i className="ri-shield-check-line"></i> Analisi Pre-Firma
-                </Button>
-              )}
               <Button variant="success" size="lg" onClick={onSave}>
-                <i className="ri-save-3-line"></i> Conferma e Salva
+                <i className={saveIcon}></i> {saveLabel}
               </Button>
             </div>
           </Card.Body>
@@ -123,8 +120,8 @@ const AnalysisStep = ({
   return (
     <div className="step-content active">
       <div style={{ 
-        background: 'rgba(99, 102, 241, 0.08)', 
-        border: '1px solid rgba(99, 102, 241, 0.2)',
+        background: 'rgba(45, 92, 242, 0.08)', 
+        border: '1px solid rgba(45, 92, 242, 0.2)',
         borderRadius: 'var(--radius-md)',
         padding: '1rem',
         marginBottom: '1.5rem',

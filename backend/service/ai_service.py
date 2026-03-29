@@ -201,3 +201,222 @@ Rispondi SOLO con questo JSON (nessun testo aggiuntivo):
     except Exception as e:
         print(f"❌ Errore analisi pre-firma: {e}")
         raise e
+
+
+def analyze_contract_risk(contract_data, testo_originale=''):
+    """
+    Analizza rischio contratto: risk score, punti critici, errori ortografici.
+    Usa criteri standard + LLM per analisi testuale.
+    """
+    if not client:
+        raise ValueError("Client AI non configurato.")
+    
+    sla = contract_data.get('sla', {})
+    det = contract_data.get('dettagli_contratto', {})
+    prodotto = contract_data.get('prodotto', 'N/A')
+    
+    tetto = sla.get('tetto_crediti', 0) or 0
+    uptime = sla.get('credito_uptime', 0) or 0
+    ticketing = sla.get('credito_ticketing', 0) or 0
+    preavviso = det.get('preavviso_giorni', 30) or 30
+    durata = det.get('durata_mesi', 12) or 12
+    
+    # Get canone
+    if 'freader' in prodotto.lower():
+        comm = contract_data.get('commerciale_freader', {})
+        canone = comm.get('canone_trimestrale', 0) or 0
+    else:
+        comm = contract_data.get('commerciale_cutai', {})
+        canone = comm.get('canone_base_trimestrale', 0) or 0
+
+    # Rule-based critical points
+    punti_critici = []
+    
+    if tetto > 12:
+        punti_critici.append({
+            'id': 'pc_tetto', 'sezione': 'SLA — Tetto Crediti', 'gravita': 'alta',
+            'valore_attuale': f'{tetto}%', 'valore_riferimento': '12% (media portafoglio)',
+            'spiegazione': f'Il tetto crediti al {tetto}% espone l\'azienda a rimborsi elevati. La media del portafoglio è 12%.',
+            'testo_contratto_originale': f'Tetto crediti SLA: {tetto}%', 'testo_migliorato': None
+        })
+    elif tetto > 10:
+        punti_critici.append({
+            'id': 'pc_tetto', 'sezione': 'SLA — Tetto Crediti', 'gravita': 'media',
+            'valore_attuale': f'{tetto}%', 'valore_riferimento': '10% (soglia consigliata)',
+            'spiegazione': f'Tetto crediti al {tetto}%, leggermente sopra la soglia consigliata del 10%.',
+            'testo_contratto_originale': f'Tetto crediti SLA: {tetto}%', 'testo_migliorato': None
+        })
+    
+    if uptime > 7:
+        punti_critici.append({
+            'id': 'pc_uptime', 'sezione': 'SLA — Credito Uptime', 'gravita': 'alta',
+            'valore_attuale': f'{uptime}%', 'valore_riferimento': '5% (media portafoglio)',
+            'spiegazione': f'Credito uptime al {uptime}% è molto alto. Rischio rimborsi significativi in caso di downtime.',
+            'testo_contratto_originale': f'Credito uptime: {uptime}%', 'testo_migliorato': None
+        })
+    elif uptime > 5:
+        punti_critici.append({
+            'id': 'pc_uptime', 'sezione': 'SLA — Credito Uptime', 'gravita': 'media',
+            'valore_attuale': f'{uptime}%', 'valore_riferimento': '5% (media portafoglio)',
+            'spiegazione': f'Credito uptime al {uptime}%, sopra la media del portafoglio.',
+            'testo_contratto_originale': f'Credito uptime: {uptime}%', 'testo_migliorato': None
+        })
+    
+    if ticketing > 6:
+        punti_critici.append({
+            'id': 'pc_ticketing', 'sezione': 'SLA — Credito Ticketing', 'gravita': 'alta' if ticketing > 8 else 'media',
+            'valore_attuale': f'{ticketing}%', 'valore_riferimento': '5% (media portafoglio)',
+            'spiegazione': f'Credito ticketing al {ticketing}% è elevato. Penale significativa per mancato SLA ticket.',
+            'testo_contratto_originale': f'Credito ticketing: {ticketing}%', 'testo_migliorato': None
+        })
+    
+    if preavviso < 30:
+        punti_critici.append({
+            'id': 'pc_preavviso_basso', 'sezione': 'Preavviso Disdetta', 'gravita': 'alta',
+            'valore_attuale': f'{preavviso} giorni', 'valore_riferimento': '30-60 giorni (standard)',
+            'spiegazione': f'Preavviso di soli {preavviso} giorni. Rischio churn improvviso senza tempo per retention.',
+            'testo_contratto_originale': f'Preavviso disdetta: {preavviso} giorni', 'testo_migliorato': None
+        })
+    elif preavviso > 120:
+        punti_critici.append({
+            'id': 'pc_preavviso_alto', 'sezione': 'Preavviso Disdetta', 'gravita': 'media',
+            'valore_attuale': f'{preavviso} giorni', 'valore_riferimento': '30-60 giorni (standard)',
+            'spiegazione': f'Preavviso di {preavviso} giorni è un vincolo operativo elevato per entrambe le parti.',
+            'testo_contratto_originale': f'Preavviso disdetta: {preavviso} giorni', 'testo_migliorato': None
+        })
+    
+    if durata > 36:
+        punti_critici.append({
+            'id': 'pc_durata', 'sezione': 'Durata Contratto', 'gravita': 'media',
+            'valore_attuale': f'{durata} mesi', 'valore_riferimento': '12-24 mesi (standard)',
+            'spiegazione': f'Contratto a {durata} mesi limita la flessibilità di repricing e adeguamento condizioni.',
+            'testo_contratto_originale': f'Durata contratto: {durata} mesi', 'testo_migliorato': None
+        })
+    
+    # Use LLM for text-based analysis if text is available
+    errori_ortografici = []
+    if testo_originale and len(testo_originale.strip()) > 50:
+        try:
+            text_prompt = f"""Analizza questo testo di contratto B2B e restituisci SOLO un JSON con:
+1. "errori_ortografici": lista di errori di battitura/grammatica trovati
+2. "clausole_rischiose": clausole testuali che presentano rischi (uso dati, esclusiva, responsabilità, rinnovo)
+
+JSON richiesto:
+{{
+  "errori_ortografici": [
+    {{"posizione": "Art. X.Y", "originale": "parola errata", "corretto": "parola corretta"}}
+  ],
+  "clausole_rischiose": [
+    {{"id": "pc_xxx", "sezione": "Nome sezione", "gravita": "alta|media|bassa", "valore_attuale": "descrizione", "valore_riferimento": "standard", "spiegazione": "perché è rischioso", "testo_contratto_originale": "testo esatto dal contratto", "testo_migliorato": null}}
+  ]
+}}
+
+Testo contratto:
+{testo_originale[:10000]}"""
+
+            response = client.chat.completions.create(
+                model="Llama-3.3-70B-Instruct",
+                messages=[
+                    {"role": "system", "content": "Sei un analista legale di contratti B2B. Rispondi SOLO con JSON valido."},
+                    {"role": "user", "content": text_prompt}
+                ],
+                temperature=0.1
+            )
+            raw = response.choices[0].message.content
+            match = re.search(r'\{.*\}', raw, re.DOTALL)
+            if match:
+                ai_result = json.loads(match.group(0))
+                errori_ortografici = ai_result.get('errori_ortografici', [])
+                ai_clausole = ai_result.get('clausole_rischiose', [])
+                for cl in ai_clausole:
+                    cl['id'] = cl.get('id', f'pc_ai_{len(punti_critici)}')
+                    punti_critici.append(cl)
+        except Exception as e:
+            print(f"⚠️ LLM text analysis failed, using rule-based only: {e}")
+    
+    # Calculate risk score based on entire contract, not just critical points count
+    # Base score starts at 15 (every contract has some inherent risk)
+    risk_score = 15
+    
+    # SLA risk component (0-30 points)
+    sla_risk = 0
+    sla_risk += min(15, tetto * 1.0)        # tetto 10% = 10pts, 20% = 15pts cap
+    sla_risk += min(8, uptime * 1.2)         # uptime 5% = 6pts, 7% = 8pts cap
+    sla_risk += min(7, ticketing * 1.0)      # ticketing 5% = 5pts, 7% = 7pts cap
+    risk_score += sla_risk
+    
+    # Contract terms risk component (0-25 points)
+    terms_risk = 0
+    if preavviso < 30:
+        terms_risk += 12                      # very short notice = high risk
+    elif preavviso < 60:
+        terms_risk += 5
+    if durata > 36:
+        terms_risk += 8                       # long lock-in
+    elif durata > 24:
+        terms_risk += 3
+    if canone > 0 and canone < 3000:
+        terms_risk += 5                       # very low revenue contract
+    risk_score += terms_risk
+    
+    # Critical points severity bonus (0-20 points)
+    weights = {'alta': 4, 'media': 2, 'bassa': 1}
+    critical_bonus = sum(weights.get(p.get('gravita', 'bassa'), 1) for p in punti_critici)
+    risk_score += min(20, critical_bonus)
+    
+    # Spelling errors add minor risk (0-5 points)
+    risk_score += min(5, len(errori_ortografici) * 2)
+    
+    # If no critical points found, risk is negligible
+    if not punti_critici and not errori_ortografici:
+        risk_score = 0
+    elif not punti_critici:
+        risk_score = min(risk_score, 1)
+    
+    # Cap at 95
+    risk_score = min(95, max(0, round(risk_score)))
+    
+    return {
+        'risk_score': risk_score,
+        'errori_ortografici': errori_ortografici,
+        'punti_critici': punti_critici
+    }
+
+
+def improve_contract_clause(clausola_originale, tipo_problema, contesto, valore_riferimento):
+    """AI riscrive una clausola critica con termini migliori."""
+    if not client:
+        raise ValueError("Client AI non configurato.")
+    
+    prompt = f"""Sei un esperto legale di contratti SaaS B2B. Riscrivi questa clausola contrattuale migliorandola per il fornitore, mantenendo il tono formale e restando nel contesto corretto. Non fare richieste irrealistiche.
+
+CLAUSOLA ORIGINALE:
+{clausola_originale}
+
+PROBLEMA IDENTIFICATO: {tipo_problema}
+CONTESTO: {contesto}
+VALORE DI RIFERIMENTO: {valore_riferimento}
+
+Rispondi SOLO con questo JSON:
+{{
+  "clausola_migliorata": "testo della clausola riscritta",
+  "motivazione": "breve spiegazione delle modifiche apportate"
+}}"""
+
+    try:
+        response = client.chat.completions.create(
+            model="Llama-3.3-70B-Instruct",
+            messages=[
+                {"role": "system", "content": "Sei un esperto legale. Rispondi SOLO con JSON valido."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.2
+        )
+        raw = response.choices[0].message.content
+        match = re.search(r'\{.*\}', raw, re.DOTALL)
+        if match:
+            return json.loads(match.group(0))
+        raise ValueError("Risposta AI non valida")
+    except Exception as e:
+        print(f"❌ Errore improve clause: {e}")
+        raise e

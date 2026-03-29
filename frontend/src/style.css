@@ -492,6 +492,7 @@ ul { list-style: none; }
     justify-content: center;
     gap: 0;
     padding: 1.5rem 0 2rem;
+    width: 100%;
 }
 
 .step {
@@ -534,7 +535,8 @@ ul { list-style: none; }
 }
 
 .step-connector {
-    width: 60px;
+    flex: 1;
+    min-width: 30px;
     height: 2px;
     background: var(--border-color);
     margin: 0 0.5rem;

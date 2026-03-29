@@ -526,200 +526,136 @@ def recalculate_risk():
 # ==========================================
 @contracts_bp.route('/download-modified-pdf', methods=['POST'])
 def download_modified_docx():
-    """Genera un DOCX completo del contratto con le sezioni modificate sostituite."""
+    """Apre il DOCX originale caricato, aggiunge in fondo le sezioni modificate."""
     from io import BytesIO
     from flask import send_file
     from docx import Document
-    from docx.shared import Pt, Inches, RGBColor, Cm
+    from docx.shared import Pt, RGBColor, Cm
     from docx.enum.text import WD_ALIGN_PARAGRAPH
-    from docx.oxml.ns import qn
     
     data = request.get_json()
     contract_data = data.get('contract_data', {})
     original_risk = data.get('original_risk', {})
     modifications = data.get('modifications', {})
     new_risk_score = data.get('new_risk_score', 0)
+    filename = data.get('filename', '')
     
     ana = contract_data.get('anagrafica', {})
-    det = contract_data.get('dettagli_contratto', {})
-    sla = contract_data.get('sla', {})
-    prodotto = contract_data.get('prodotto', 'N/A')
-    
-    if 'freader' in prodotto.lower():
-        comm = contract_data.get('commerciale_freader', {})
-        canone_label = 'Canone Trimestrale'
-        canone_val = comm.get('canone_trimestrale', 'N/A')
-    else:
-        comm = contract_data.get('commerciale_cutai', {})
-        canone_label = 'Canone Base Trimestrale'
-        canone_val = comm.get('canone_base_trimestrale', 'N/A')
-    
-    modified_ids = set(modifications.keys()) if modifications else set()
     punti = original_risk.get('punti_critici', [])
     orig_score = original_risk.get('risk_score', 0)
+    modified_ids = set(modifications.keys()) if modifications else set()
     
-    doc = Document()
+    # Try to open the original uploaded file
+    original_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename) if filename else None
     
-    # Page margins
-    for section in doc.sections:
-        section.top_margin = Cm(2)
-        section.bottom_margin = Cm(2)
-        section.left_margin = Cm(2.5)
-        section.right_margin = Cm(2.5)
-    
-    # Helper: add styled heading
-    def add_heading(text, level=1):
-        h = doc.add_heading(text, level=level)
-        for run in h.runs:
-            run.font.color.rgb = RGBColor(0x1E, 0x29, 0x3B)
-        return h
-    
-    def add_field(label, value):
-        p = doc.add_paragraph()
-        run_label = p.add_run(f'{label}: ')
-        run_label.bold = True
-        run_label.font.size = Pt(10)
-        run_val = p.add_run(str(value))
-        run_val.font.size = Pt(10)
-        p.paragraph_format.space_after = Pt(2)
-        return p
-    
-    # ── HEADER ──
-    title = doc.add_heading(f'Contratto — {ana.get("cliente_ragione_sociale", "N/A")}', level=0)
-    for run in title.runs:
-        run.font.color.rgb = RGBColor(0x1E, 0x29, 0x3B)
-    
-    subtitle = doc.add_paragraph()
-    run = subtitle.add_run(f'Prodotto: {prodotto}  |  Data: {det.get("data_firma", "N/A")}  |  Generato da FOCO Contract Intelligence')
-    run.font.size = Pt(9)
-    run.font.color.rgb = RGBColor(0x94, 0xA3, 0xB8)
-    
-    doc.add_paragraph()  # spacer
-    
-    # ── RISK SCORE ──
-    add_heading('Risk Score', level=2)
-    table = doc.add_table(rows=2, cols=3)
-    table.style = 'Light Grid Accent 1'
-    table.rows[0].cells[0].text = 'Prima'
-    table.rows[0].cells[1].text = 'Dopo'
-    table.rows[0].cells[2].text = 'Delta'
-    table.rows[1].cells[0].text = f'{orig_score}%'
-    table.rows[1].cells[1].text = f'{new_risk_score}%'
-    delta = new_risk_score - orig_score
-    table.rows[1].cells[2].text = f'{delta:+d}%'
-    for cell in table.rows[1].cells:
-        for paragraph in cell.paragraphs:
-            for run in paragraph.runs:
-                run.bold = True
-    doc.add_paragraph()
-    
-    # ── ART. 1 — ANAGRAFICA ──
-    add_heading('Art. 1 — Anagrafica', level=2)
-    add_field('Ragione Sociale', ana.get('cliente_ragione_sociale', 'N/A'))
-    add_field('Sede Legale', ana.get('cliente_sede_legale', 'N/A'))
-    
-    # ── ART. 2 — DETTAGLI CONTRATTO ──
-    add_heading('Art. 2 — Dettagli Contratto', level=2)
-    add_field('Data Firma', det.get('data_firma', 'N/A'))
-    add_field('Durata', f'{det.get("durata_mesi", "N/A")} mesi')
-    add_field('Preavviso Disdetta', f'{det.get("preavviso_giorni", "N/A")} giorni')
-    
-    # ── ART. 3 — CONDIZIONI COMMERCIALI ──
-    add_heading('Art. 3 — Condizioni Commerciali', level=2)
-    add_field(canone_label, f'€ {canone_val}')
-    if 'freader' in prodotto.lower():
-        add_field('Prezzo Fascia 1 (1k-10k)', f'{comm.get("prezzo_fascia_1", "N/A")} cent/pagina')
-        add_field('Prezzo Fascia 2 (10k-50k)', f'{comm.get("prezzo_fascia_2", "N/A")} cent/pagina')
-        add_field('Prezzo Fascia 3 (>50k)', f'{comm.get("prezzo_fascia_3", "N/A")} cent/pagina')
+    if original_path and os.path.exists(original_path) and original_path.endswith('.docx'):
+        doc = Document(original_path)
     else:
-        add_field('Profilo Commerciale', comm.get('profilo_commerciale', 'N/A'))
-        add_field('Utenti Inclusi', comm.get('soglia_utenti_inclusi', 'N/A'))
-        add_field('Fee Utente Extra', f'€ {comm.get("fee_utente_extra", "N/A")}')
+        # Fallback: create new doc with contract data
+        doc = Document()
+        for section in doc.sections:
+            section.top_margin = Cm(2)
+            section.bottom_margin = Cm(2)
+            section.left_margin = Cm(2.5)
+            section.right_margin = Cm(2.5)
+        
+        prodotto = contract_data.get('prodotto', 'N/A')
+        det = contract_data.get('dettagli_contratto', {})
+        sla = contract_data.get('sla', {})
+        
+        doc.add_heading(f'Contratto — {ana.get("cliente_ragione_sociale", "N/A")}', level=0)
+        p = doc.add_paragraph()
+        r = p.add_run(f'Prodotto: {prodotto} | Data: {det.get("data_firma", "N/A")}')
+        r.font.size = Pt(10)
+        
+        doc.add_heading('Anagrafica', level=2)
+        doc.add_paragraph(f'Ragione Sociale: {ana.get("cliente_ragione_sociale", "N/A")}')
+        doc.add_paragraph(f'Sede Legale: {ana.get("cliente_sede_legale", "N/A")}')
+        
+        doc.add_heading('Dettagli Contratto', level=2)
+        doc.add_paragraph(f'Data Firma: {det.get("data_firma", "N/A")}')
+        doc.add_paragraph(f'Durata: {det.get("durata_mesi", "N/A")} mesi')
+        doc.add_paragraph(f'Preavviso: {det.get("preavviso_giorni", "N/A")} giorni')
+        
+        doc.add_heading('SLA', level=2)
+        doc.add_paragraph(f'Credito Uptime: {sla.get("credito_uptime", "N/A")}%')
+        doc.add_paragraph(f'Credito Ticketing: {sla.get("credito_ticketing", "N/A")}%')
+        doc.add_paragraph(f'Tetto Crediti: {sla.get("tetto_crediti", "N/A")}%')
     
-    # ── ART. 4 — SLA ──
-    add_heading('Art. 4 — Service Level Agreement', level=2)
-    
-    # Check if SLA fields were modified
-    sla_fields = {
-        'pc_uptime': ('Credito Uptime', f'{sla.get("credito_uptime", "N/A")}%'),
-        'pc_ticketing': ('Credito Ticketing', f'{sla.get("credito_ticketing", "N/A")}%'),
-        'pc_tetto': ('Tetto Crediti', f'{sla.get("tetto_crediti", "N/A")}%'),
-    }
-    
-    for pc_id, (label, original_val) in sla_fields.items():
-        if pc_id in modified_ids:
-            mod = modifications[pc_id]
-            # Show as modified (new version)
-            p = doc.add_paragraph()
-            run_label = p.add_run(f'{label}: ')
-            run_label.bold = True
-            run_label.font.size = Pt(10)
-            run_new = p.add_run(mod.get('testo_migliorato', original_val))
-            run_new.font.size = Pt(10)
-            run_new.font.color.rgb = RGBColor(0x05, 0x96, 0x69)  # green
-            run_new.bold = True
-            run_tag = p.add_run('  [MODIFICATO]')
-            run_tag.font.size = Pt(8)
-            run_tag.font.color.rgb = RGBColor(0x05, 0x96, 0x69)
-            p.paragraph_format.space_after = Pt(2)
-        else:
-            add_field(label, original_val)
-    
-    # ── ART. 5 — CLAUSOLE MODIFICATE ──
-    other_mods = {pid: m for pid, m in modifications.items() if pid not in sla_fields and m.get('testo_migliorato')}
-    if other_mods:
-        add_heading('Art. 5 — Clausole Riviste', level=2)
-        for pid, mod in other_mods.items():
-            point = next((p for p in punti if p.get('id') == pid), None)
-            if not point:
+    # ── APPEND: Modifications section at the end ──
+    if modified_ids:
+        doc.add_page_break()
+        
+        h = doc.add_heading('ALLEGATO — Modifiche Proposte da FOCO AI', level=1)
+        for run in h.runs:
+            run.font.color.rgb = RGBColor(0x4F, 0x46, 0xE5)
+        
+        # Risk score table
+        p_score = doc.add_paragraph()
+        r = p_score.add_run(f'Risk Score: {orig_score}% → {new_risk_score}% (delta {new_risk_score - orig_score:+d}%)')
+        r.bold = True
+        r.font.size = Pt(11)
+        r.font.color.rgb = RGBColor(0x05, 0x96, 0x69) if new_risk_score < orig_score else RGBColor(0xDC, 0x26, 0x26)
+        
+        doc.add_paragraph()
+        
+        for p_item in punti:
+            if p_item.get('id') not in modified_ids:
                 continue
+            mod = modifications[p_item['id']]
             
-            # Section title
-            p_title = doc.add_paragraph()
-            run_t = p_title.add_run(f'{point.get("sezione", "")}')
-            run_t.bold = True
-            run_t.font.size = Pt(10)
+            # Section heading
+            h2 = doc.add_heading(p_item.get('sezione', ''), level=2)
+            for run in h2.runs:
+                run.font.color.rgb = RGBColor(0x1E, 0x29, 0x3B)
             
-            # New text (green)
+            # Severity
+            p_sev = doc.add_paragraph()
+            r_sev = p_sev.add_run(f'Gravità: {p_item.get("gravita", "").upper()}')
+            r_sev.font.size = Pt(9)
+            r_sev.font.color.rgb = RGBColor(0xDC, 0x26, 0x26) if p_item.get('gravita') == 'alta' else RGBColor(0xD9, 0x77, 0x06)
+            
+            # Original text (strikethrough)
+            p_orig = doc.add_paragraph()
+            r_label = p_orig.add_run('ORIGINALE: ')
+            r_label.bold = True
+            r_label.font.size = Pt(9)
+            r_label.font.color.rgb = RGBColor(0x94, 0xA3, 0xB8)
+            r_text = p_orig.add_run(p_item.get('testo_contratto_originale', ''))
+            r_text.font.size = Pt(10)
+            r_text.font.color.rgb = RGBColor(0x94, 0xA3, 0xB8)
+            r_text.font.strike = True
+            
+            # New text (green, bold)
             p_new = doc.add_paragraph()
-            run_new = p_new.add_run(mod.get('testo_migliorato', ''))
-            run_new.font.size = Pt(10)
-            run_new.font.color.rgb = RGBColor(0x05, 0x96, 0x69)
+            r_label2 = p_new.add_run('NUOVO: ')
+            r_label2.bold = True
+            r_label2.font.size = Pt(9)
+            r_label2.font.color.rgb = RGBColor(0x05, 0x96, 0x69)
+            r_new = p_new.add_run(mod.get('testo_migliorato', ''))
+            r_new.font.size = Pt(10)
+            r_new.font.color.rgb = RGBColor(0x05, 0x96, 0x69)
+            r_new.bold = True
             
             if mod.get('motivazione'):
                 p_mot = doc.add_paragraph()
-                run_mot = p_mot.add_run(f'Nota: {mod["motivazione"]}')
-                run_mot.font.size = Pt(8)
-                run_mot.font.italic = True
-                run_mot.font.color.rgb = RGBColor(0x94, 0xA3, 0xB8)
+                r_mot = p_mot.add_run(f'Motivazione: {mod["motivazione"]}')
+                r_mot.font.size = Pt(8)
+                r_mot.font.italic = True
+                r_mot.font.color.rgb = RGBColor(0x94, 0xA3, 0xB8)
             
-            doc.add_paragraph()  # spacer
+            doc.add_paragraph()
     
-    # ── PUNTI CRITICI NON MODIFICATI ──
-    unmodified = [p for p in punti if p.get('id') not in modified_ids]
-    if unmodified:
-        add_heading('Note — Punti Critici Non Modificati', level=2)
-        for p in unmodified:
-            para = doc.add_paragraph(style='List Bullet')
-            run_sev = para.add_run(f'[{p.get("gravita", "").upper()}] ')
-            run_sev.bold = True
-            run_sev.font.size = Pt(9)
-            if p.get('gravita') == 'alta':
-                run_sev.font.color.rgb = RGBColor(0xDC, 0x26, 0x26)
-            run_desc = para.add_run(f'{p.get("sezione", "")}: {p.get("spiegazione", "")}')
-            run_desc.font.size = Pt(9)
-    
-    # ── FOOTER ──
-    doc.add_paragraph()
+    # Footer
     footer = doc.add_paragraph()
     footer.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    run_f = footer.add_run(f'Generato da FOCO Contract Intelligence — {datetime.now().strftime("%d/%m/%Y %H:%M")}')
-    run_f.font.size = Pt(8)
-    run_f.font.color.rgb = RGBColor(0x94, 0xA3, 0xB8)
+    r_f = footer.add_run(f'Generato da FOCO Contract Intelligence — {datetime.now().strftime("%d/%m/%Y %H:%M")}')
+    r_f.font.size = Pt(8)
+    r_f.font.color.rgb = RGBColor(0x94, 0xA3, 0xB8)
     
     buf = BytesIO()
     doc.save(buf)
     buf.seek(0)
     
-    filename = f'contratto_{ana.get("cliente_ragione_sociale", "contratto").replace(" ", "_")}.docx'
-    return send_file(buf, mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document', as_attachment=True, download_name=filename)
+    out_name = f'contratto_{ana.get("cliente_ragione_sociale", "contratto").replace(" ", "_")}.docx'
+    return send_file(buf, mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document', as_attachment=True, download_name=out_name)

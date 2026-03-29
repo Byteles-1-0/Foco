@@ -110,11 +110,11 @@ export const api = {
   
   getRepricing: () => fetchApi(`${API_DASHBOARD}/repricing`),
   
-  downloadModifiedPdf: (contractData, originalRisk, modifications, newRiskScore) => {
+  downloadModifiedPdf: (contractData, originalRisk, modifications, newRiskScore, filename = null) => {
     return fetchApi(`${API_BASE}/download-modified-pdf`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contract_data: contractData, original_risk: originalRisk, modifications, new_risk_score: newRiskScore })
+      body: JSON.stringify({ contract_data: contractData, original_risk: originalRisk, modifications, new_risk_score: newRiskScore, filename })
     });
   },
   

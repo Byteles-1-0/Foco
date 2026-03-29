@@ -106,11 +106,6 @@ const AnalysisStep = ({
               <Button variant="ghost" onClick={onBack}>
                 <i className="ri-arrow-left-line"></i> Indietro
               </Button>
-              {onPreSignAnalysis && (
-                <Button variant="primary" onClick={onPreSignAnalysis}>
-                  <i className="ri-shield-check-line"></i> Analisi Pre-Firma
-                </Button>
-              )}
               <Button variant="success" size="lg" onClick={onSave}>
                 <i className={saveIcon}></i> {saveLabel}
               </Button>

@@ -5,7 +5,7 @@ import Card from '../common/Card';
 import Button from '../common/Button';
 import StatCard from '../common/StatCard';
 
-const RiskComparisonStep = ({ analysisResult, originalRisk, modifications, onBack, onSave, onShowToast }) => {
+const RiskComparisonStep = ({ analysisResult, originalRisk, modifications, onBack, onSave, onShowToast, currentFilename }) => {
   if (!originalRisk) return null;
 
   const savedIds = new Set(
@@ -80,7 +80,8 @@ const RiskComparisonStep = ({ analysisResult, originalRisk, modifications, onBac
         Object.fromEntries(
           Object.entries(modifications).filter(([_, m]) => m.saved)
         ),
-        newScore
+        newScore,
+        currentFilename
       );
       if (!res.ok) {
         onShowToast('Errore generazione PDF', 'error');

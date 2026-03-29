@@ -189,6 +189,7 @@ const UploadView = ({ onViewChange, onShowLoader, onHideLoader, onShowToast, onC
               onBack={() => setCurrentStep(3)}
               onSave={handleSave}
               onShowToast={onShowToast}
+              currentFilename={currentFilename}
             />
           )}
 

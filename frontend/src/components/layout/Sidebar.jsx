@@ -10,6 +10,7 @@ const Sidebar = ({ activeView, onViewChange, tenantName, isOpen, onToggle }) => 
     { id: 'radar', icon: 'ri-radar-line', label: 'Risk Radar' },
     { id: 'topclients', icon: 'ri-vip-crown-2-line', label: 'Top Clients' },
     { id: 'advisor', icon: 'ri-brain-line', label: 'AI Advisor' },
+    { id: 'repricing', icon: 'ri-price-tag-3-line', label: 'Re-Pricing' },
     { id: 'simulator', icon: 'ri-flask-line', label: 'Simulatore' }
   ];
 

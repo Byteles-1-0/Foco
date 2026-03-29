@@ -1,12 +1,16 @@
 // src/components/upload/PipelineSteps.jsx
 import React from 'react';
 
-const PipelineSteps = ({ currentStep }) => {
-  const steps = [
+const PipelineSteps = ({ currentStep, totalSteps = 3 }) => {
+  const allSteps = [
     { number: 1, label: 'Upload' },
     { number: 2, label: 'Analisi AI' },
-    { number: 3, label: 'Conferma' }
+    { number: 3, label: 'Risk Analysis' },
+    { number: 4, label: 'Confronto' },
+    { number: 5, label: 'Conferma' }
   ];
+
+  const steps = allSteps.slice(0, totalSteps);
 
   return (
     <div className="pipeline-steps">

@@ -460,3 +460,72 @@ def pre_sign_analysis():
     except Exception as e:
         print(f"❌ Errore analisi pre-firma: {str(e)}")
         return jsonify({"status": "error", "message": str(e)}), 500
+
+
+# ==========================================
+# 9. RISK ANALYSIS (POST)
+# ==========================================
+@contracts_bp.route('/risk-analysis', methods=['POST'])
+def risk_analysis():
+    """Analizza rischio contratto: risk score, punti critici, errori ortografici."""
+    from service.ai_service import analyze_contract_risk
+    
+    data = request.get_json()
+    contract_data = data.get('contract_data')
+    testo_originale = data.get('testo_originale', '')
+    
+    if not contract_data:
+        return jsonify({"status": "error", "message": "Dati contratto mancanti"}), 400
+    
+    try:
+        result = analyze_contract_risk(contract_data, testo_originale)
+        return jsonify({"status": "success", "data": result}), 200
+    except Exception as e:
+        print(f"❌ Errore risk analysis: {str(e)}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+# ==========================================
+# 10. IMPROVE CLAUSE (POST)
+# ==========================================
+@contracts_bp.route('/improve-clause', methods=['POST'])
+def improve_clause():
+    """AI riscrive una clausola critica con termini migliori."""
+    from service.ai_service import improve_contract_clause
+    
+    data = request.get_json()
+    clausola_originale = data.get('clausola_originale', '')
+    tipo_problema = data.get('tipo_problema', '')
+    contesto = data.get('contesto_contratto', '')
+    valore_rif = data.get('valore_riferimento', '')
+    
+    if not clausola_originale:
+        return jsonify({"status": "error", "message": "Clausola originale mancante"}), 400
+    
+    try:
+        result = improve_contract_clause(clausola_originale, tipo_problema, contesto, valore_rif)
+        return jsonify({"status": "success", "data": result}), 200
+    except Exception as e:
+        print(f"❌ Errore improve clause: {str(e)}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+# ==========================================
+# 11. RECALCULATE RISK (POST)
+# ==========================================
+@contracts_bp.route('/recalculate-risk', methods=['POST'])
+def recalculate_risk():
+    """Ricalcola risk score con le modifiche applicate."""
+    from service.ai_service import analyze_contract_risk
+    
+    data = request.get_json()
+    contract_data = data.get('contract_data')
+    
+    if not contract_data:
+        return jsonify({"status": "error", "message": "Dati contratto mancanti"}), 400
+    
+    try:
+        result = analyze_contract_risk(contract_data, '')
+        return jsonify({"status": "success", "data": result}), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500

@@ -84,6 +84,32 @@ export const api = {
     });
   },
   
+  riskAnalysis: (contractData, testoOriginale = '') => {
+    return fetchApi(`${API_BASE}/risk-analysis`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contract_data: contractData, testo_originale: testoOriginale })
+    });
+  },
+  
+  improveClause: (clausolaOriginale, tipoProblema, contesto, valoreRiferimento) => {
+    return fetchApi(`${API_BASE}/improve-clause`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clausola_originale: clausolaOriginale, tipo_problema: tipoProblema, contesto_contratto: contesto, valore_riferimento: valoreRiferimento })
+    });
+  },
+  
+  recalculateRisk: (contractData) => {
+    return fetchApi(`${API_BASE}/recalculate-risk`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contract_data: contractData })
+    });
+  },
+  
+  getRepricing: () => fetchApi(`${API_DASHBOARD}/repricing`),
+  
   // Dashboard
   getKpi: () => fetchApi(`${API_DASHBOARD}/kpi`),
   getDashboardContracts: () => fetchApi(`${API_DASHBOARD}/contracts`),

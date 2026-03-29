@@ -24,6 +24,7 @@ import TopClientsView from './components/views/TopClientsView';
 import AdvisorView from './components/views/AdvisorView';
 import ContractDetailView from './components/views/ContractDetailView';
 import SimulatorView from './components/views/SimulatorView';
+import RepricingView from './components/views/RepricingView';
 
 function App() {
   // State
@@ -119,6 +120,7 @@ function App() {
     topclients: 'Top Clients',
     advisor: 'AI Advisor',
     simulator: 'Simulatore Scenari',
+    repricing: 'Re-Pricing',
     detail: 'Dettaglio Contratto'
   };
 
@@ -186,6 +188,8 @@ function App() {
             {currentView === 'advisor' && <AdvisorView />}
 
             {currentView === 'simulator' && <SimulatorView />}
+
+            {currentView === 'repricing' && <RepricingView />}
 
             {currentView === 'detail' && (
               <ContractDetailView

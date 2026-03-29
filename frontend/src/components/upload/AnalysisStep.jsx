@@ -11,7 +11,9 @@ const AnalysisStep = ({
   onBack, 
   onSave, 
   onSaveAll,
-  onPreSignAnalysis
+  onPreSignAnalysis,
+  saveLabel = "Conferma e Salva",
+  saveIcon = "ri-save-3-line"
 }) => {
   const buildSection = (title, icon, fields) => {
     return (
@@ -110,7 +112,7 @@ const AnalysisStep = ({
                 </Button>
               )}
               <Button variant="success" size="lg" onClick={onSave}>
-                <i className="ri-save-3-line"></i> Conferma e Salva
+                <i className={saveIcon}></i> {saveLabel}
               </Button>
             </div>
           </Card.Body>

@@ -586,7 +586,7 @@ def download_modified_docx():
     if modified_ids:
         doc.add_page_break()
         
-        h = doc.add_heading('ALLEGATO — Modifiche Proposte da FOCO AI', level=1)
+        h = doc.add_heading('ALLEGATO — Modifiche Proposte da Nexus Core AI', level=1)
         for run in h.runs:
             run.font.color.rgb = RGBColor(0x4F, 0x46, 0xE5)
         
@@ -649,7 +649,7 @@ def download_modified_docx():
     # Footer
     footer = doc.add_paragraph()
     footer.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    r_f = footer.add_run(f'Generato da FOCO Contract Intelligence — {datetime.now().strftime("%d/%m/%Y %H:%M")}')
+    r_f = footer.add_run(f'Generato da Nexus Core Contract Intelligence — {datetime.now().strftime("%d/%m/%Y %H:%M")}')
     r_f.font.size = Pt(8)
     r_f.font.color.rgb = RGBColor(0x94, 0xA3, 0xB8)
     

@@ -80,7 +80,7 @@ const RepricingView = () => {
                       <div key={p.fascia} style={{
                         border: `2px solid ${isRec ? 'var(--accent)' : 'var(--border-color)'}`,
                         borderRadius: 'var(--radius-md)', padding: '1rem',
-                        background: isRec ? 'rgba(99,102,241,0.05)' : 'transparent',
+                        background: isRec ? 'rgba(45,92,242,0.05)' : 'transparent',
                         position: 'relative'
                       }}>
                         {isRec && <div style={{ position: 'absolute', top: '-10px', left: '50%', transform: 'translateX(-50%)', background: 'var(--accent)', color: '#fff', fontSize: '0.65rem', padding: '2px 8px', borderRadius: '4px', fontWeight: 700 }}>RACCOMANDATA</div>}

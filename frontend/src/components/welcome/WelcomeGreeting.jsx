@@ -29,8 +29,8 @@ const WelcomeGreeting = ({ onContinue }) => {
         justifyContent: 'center'
       }}>
         <div className="greeting-checkmark" style={{
-          background: 'rgba(99, 102, 241, 0.1)',
-          borderColor: 'rgba(99, 102, 241, 0.3)',
+          background: 'rgba(45, 92, 242, 0.1)',
+          borderColor: 'rgba(45, 92, 242, 0.3)',
           width: '60px',
           height: '60px',
           fontSize: '1.8rem',
@@ -56,7 +56,7 @@ const WelcomeGreeting = ({ onContinue }) => {
             width: 'auto',
             minWidth: '300px',
             padding: '1rem 3rem',
-            boxShadow: '0 0 20px rgba(99, 102, 241, 0.3)',
+            boxShadow: '0 0 20px rgba(45, 92, 242, 0.3)',
             margin: '0 auto'
           }}
         >

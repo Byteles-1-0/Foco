@@ -39,7 +39,7 @@ const WelcomeUpload = ({ onFilesSelected, onStartAnalysis }) => {
         <div className="welcome-logo-icon">
           <i className="ri-file-shield-2-line"></i>
         </div>
-        <h1 className="welcome-title">FOCO</h1>
+        <h1 className="welcome-title">Nexus Core</h1>
         <p className="welcome-tagline">Contract Intelligence Platform</p>
       </div>
 

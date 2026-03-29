@@ -142,7 +142,7 @@ function App() {
 
           <main className="main-content">
             <Topbar
-              title={viewTitles[currentView] || 'FOCO'}
+              title={viewTitles[currentView] || 'Nexus Core'}
               apiStatus={apiStatus}
               onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
             />

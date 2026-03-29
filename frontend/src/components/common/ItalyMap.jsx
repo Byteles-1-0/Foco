@@ -1,13 +1,13 @@
 // src/components/common/ItalyMap.jsx
 // Mappa Italia con Leaflet vanilla
-// Pin viola (#6366f1) per Freader, gialli (#f59e0b) per CutAI
+// Pin viola (#2D5CF2) per Freader, gialli (#f59e0b) per CutAI
 import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { api } from '../../utils/api';
 
 const COLORS = {
-  Freader: '#6366f1',
+  Freader: '#2D5CF2',
   CutAI: '#f59e0b',
 };
 

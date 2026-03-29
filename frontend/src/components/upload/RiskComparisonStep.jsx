@@ -103,8 +103,8 @@ const RiskComparisonStep = ({ analysisResult, originalRisk, modifications, onBac
   return (
     <div className="step-content active">
       <div style={{
-        background: 'rgba(99, 102, 241, 0.08)',
-        border: '1px solid rgba(99, 102, 241, 0.2)',
+        background: 'rgba(45, 92, 242, 0.08)',
+        border: '1px solid rgba(45, 92, 242, 0.2)',
         borderRadius: 'var(--radius-md)',
         padding: '1rem',
         marginBottom: '1.5rem',

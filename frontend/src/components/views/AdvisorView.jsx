@@ -26,8 +26,8 @@ const AdvisorView = () => {
   return (
     <section className="view active">
       <div style={{
-        background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.05))',
-        border: '1px solid rgba(99, 102, 241, 0.3)',
+        background: 'linear-gradient(135deg, rgba(45, 92, 242, 0.1), rgba(74, 117, 255, 0.05))',
+        border: '1px solid rgba(45, 92, 242, 0.3)',
         borderRadius: 'var(--radius-md)',
         padding: '1.25rem 1.5rem',
         marginBottom: '1.5rem',
@@ -57,7 +57,7 @@ const AdvisorView = () => {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <div style={{
                     width: '32px', height: '32px', borderRadius: '8px',
-                    background: 'rgba(99,102,241,0.1)',
+                    background: 'rgba(45,92,242,0.1)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center'
                   }}>
                     <i className="ri-robot-2-fill" style={{ color: 'var(--accent)' }}></i>

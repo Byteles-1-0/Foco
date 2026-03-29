@@ -77,7 +77,7 @@ const OverviewView = ({ contracts, onRefresh, onViewChange }) => {
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: 'rgba(99,102,241,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: 'rgba(45,92,242,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <i className="ri-pie-chart-2-line" style={{ fontSize: '1.2rem', color: 'var(--accent)' }}></i>
               </div>
               <div>

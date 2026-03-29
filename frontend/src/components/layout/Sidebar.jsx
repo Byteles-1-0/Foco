@@ -18,7 +18,7 @@ const Sidebar = ({ activeView, onViewChange, tenantName, isOpen, onToggle }) => 
           <div className="logo-icon">
             <i className="ri-file-shield-2-line"></i>
           </div>
-          <span className="logo-text">FOCO</span>
+          <span className="logo-text">Nexus Core</span>
         </div>
         <p className="logo-subtitle">Contract Intelligence</p>
       </div>
